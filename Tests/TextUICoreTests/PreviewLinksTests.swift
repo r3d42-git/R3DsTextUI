@@ -1,4 +1,5 @@
 import XCTest
+import CoreFoundation
 @testable import TextUICore
 
 final class PreviewLinksTests: XCTestCase {
@@ -15,14 +16,14 @@ final class PreviewLinksTests: XCTestCase {
 
     func testAnchorsStayInOfflineDocument() throws {
         for text in ["about:blank#section", "about:blank#", "about:blank#section?text", "about:blank#caf%C3%A9"] {
-            // Preserve the serialized URL supplied by WebKit. Older Foundation
-            // URL(string:) rewrites the fragment delimiter in opaque URLs as %23.
-            let url = try XCTUnwrap(URL(dataRepresentation: Data(text.utf8), relativeTo: nil))
+            // WebKit supplies native URLs; Swift URL constructors on macOS 15
+            // rewrite the fragment delimiter in opaque URLs as %23.
+            let url = try XCTUnwrap(CFURLCreateWithString(nil, text as CFString, nil)) as URL
             XCTAssertEqual(url.absoluteString, text)
             XCTAssertTrue(PreviewLinks.isDocumentAnchor(url), "input=\(text), serialized=\(url.absoluteString), path=\(url.path), fragment=\(String(describing: url.fragment))")
         }
         for text in ["https://example.com/#section", "about:blank", "about:other#section", "about:blank?query#section", "about:blank/other#section", "about://blank#section", "about:blank%23section"] {
-            XCTAssertFalse(PreviewLinks.isDocumentAnchor(try XCTUnwrap(URL(dataRepresentation: Data(text.utf8), relativeTo: nil))), text)
+            XCTAssertFalse(PreviewLinks.isDocumentAnchor(try XCTUnwrap(CFURLCreateWithString(nil, text as CFString, nil)) as URL), text)
         }
     }
 }
