@@ -31,7 +31,7 @@ Swift Package mit AppKit-Executable `TextUI`, einer `TextUICore`-Bibliothek und 
 
 Der Nutzer hat am 2026-09-27 das öffentliche Repository `r3d42-git/R3DsTextUI`, Commit und Push aller Projektänderungen sowie die signierte und notarisierte Distribution autorisiert. Lizenz: GPL-3.0-or-later; Drittanbieterhinweise bleiben erhalten. Keine Nutzerdateien, echten Entwürfe, Tokens oder privaten Schlüssel einchecken.
 
-Releaseprofil: SwiftPM, `main`, Version 0.1.0 (Build 1), Apple Silicon arm64, macOS 15+, Bundle-ID `com.r3d42.textui`. Lokale Developer-ID-Signierung mit Hardened Runtime, Schlüsselbundprofil `TextUI`. `script/release.sh` erzeugt das ZIP erst nach angenommener Notarisierung und Stapling der App. `verify_release.sh` prüft die frisch entpackte App; `publish_release.sh` prüft Quellcommit, freien Tag, öffentliches Repository und den späteren GitHub-Download samt Digest. CI baut und testet ohne Signiergeheimnisse.
+Releaseprofil: SwiftPM, `main`, Version 0.1.1 (Build 2), Apple Silicon arm64, macOS 15+, Bundle-ID `com.r3d42.textui`. Lokale Developer-ID-Signierung mit Hardened Runtime, Schlüsselbundprofil `TextUI`. `script/release.sh` erzeugt das ZIP erst nach angenommener Notarisierung und Stapling der App. `verify_release.sh` prüft die frisch entpackte App; `publish_release.sh` prüft Quellcommit, freien Tag, öffentliches Repository und den späteren GitHub-Download samt Digest. CI baut und testet ohne Signiergeheimnisse.
 
 ## Validierung am 2026-09-27
 
@@ -159,3 +159,18 @@ Nach Zustimmung: lokale Korrektur committen/pushen, exakt diesen CI-Lauf erfolgr
 ## Fortsetzung freigegeben
 
 Der Nutzer hat den Push der neuen Version einschließlich weiterem CI-Lauf und Veröffentlichung von 0.1.1 ausdrücklich bestätigt. Die vorstehende Freigabesperre ist damit aufgehoben. Der bereits lokal mit 49 erfolgreichen Tests geprüfte Stand wird committed und gepusht; Veröffentlichung erfolgt erst nach erfolgreicher CI-Prüfung desselben Commits.
+
+## Abgeschlossen: öffentlicher Release 0.1.1
+
+- Release: https://github.com/r3d42-git/R3DsTextUI/releases/tag/v0.1.1 ; öffentlich, kein Draft/Prerelease.
+- Unveränderlicher Tag `v0.1.1` auf Quellcommit `6b3cd5c7ca9d2ab03d969cdd57ac93e3332ff1f9`. Der nachfolgende Dokumentationscommit verändert weder Tag noch Artefakt.
+- Erfolgreiche CI des exakten Releasecommits: https://github.com/r3d42-git/R3DsTextUI/actions/runs/36320863042 . Alle Tests, App-Bundlebuild und arm64-Prüfung unter macOS 15 bestanden. Die früheren fehlgeschlagenen Läufe bleiben historische Diagnoseergebnisse.
+- Lokal 49 Tests bestanden (41 Core, 8 native Editor-/Vorschautests einschließlich echter WebView mit hierarchischer Offline-Basisadresse).
+- Asset: https://github.com/r3d42-git/R3DsTextUI/releases/download/v0.1.1/TextUI-0.1.1-macOS-arm64.zip ; SHA-256-Datei daneben.
+- ZIP SHA-256: `832296816f3c115221af0b4bace85d063fc4c8551c25dd86c1458269bbb2725e`.
+- Apple-Submission `90e45102-c51e-4b88-8239-b2fdd880ee9b`: `Accepted`. Developer ID Application: Philipp John Hild, Team `G6JH37W285`, Hardened Runtime, Zeitstempel und vor der ZIP-Erstellung angeheftetes App-Ticket.
+- Version 0.1.1 (Build 2), arm64, macOS 15+, Bundle-ID `com.r3d42.textui`, GPL-3.0-or-later.
+- Publish-Dry-run bestanden. Frisch heruntergeladenes GitHub-ZIP stimmt mit lokaler Prüfsumme und GitHub-Digest überein; ZIP-Integrität, strict codesign, Identität/Version/Architektur/Lizenzdateien, stapler validate und Gatekeeper erfolgreich. Gatekeeper meldet `Notarized Developer ID`.
+- Die ältere Version 0.1.0 wurde weder verändert noch entfernt. Ältere unveröffentlichte 0.1.1-Builds liegen getrennt unter dem ignorierten `.local/`; nur `dist/release/0.1.1` gehört zum finalen Releasecommit.
+- Grenzen: kein Start auf einem sauberen fremden Mac, kein manueller vollständiger macOS-15-App-Abnahmetest und kein echter Rechnerneustart. CI-Tests unter macOS 15 sind davon getrennte Evidenz.
+- Diese abschließende Dokumentation wird separat mit `[skip ci]` committed, um für reine Nachweise keinen weiteren identischen Build auszulösen. Der Releasecommit bleibt durch den erfolgreichen CI-Lauf belegt.
