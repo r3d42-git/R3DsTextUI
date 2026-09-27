@@ -14,8 +14,10 @@ final class PreviewLinksTests: XCTestCase {
     }
 
     func testAnchorsStayInOfflineDocument() throws {
-        XCTAssertTrue(PreviewLinks.isDocumentAnchor(try XCTUnwrap(URL(string: "about:blank#section"))))
-        for text in ["https://example.com/#section", "about:blank", "about:other#section"] {
+        for text in ["about:blank#section", "about:blank#", "about:blank#section?text", "about:blank#caf%C3%A9"] {
+            XCTAssertTrue(PreviewLinks.isDocumentAnchor(try XCTUnwrap(URL(string: text))), text)
+        }
+        for text in ["https://example.com/#section", "about:blank", "about:other#section", "about:blank?query#section", "about:blank/other#section", "about://blank#section", "about:blank%23section"] {
             XCTAssertFalse(PreviewLinks.isDocumentAnchor(try XCTUnwrap(URL(string: text))))
         }
     }

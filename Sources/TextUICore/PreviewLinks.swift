@@ -11,6 +11,8 @@ public enum PreviewLinks {
     }
 
     public static func isDocumentAnchor(_ url: URL) -> Bool {
-        url.scheme == "about" && url.path == "blank" && url.query == nil && url.fragment != nil
+        // Foundation versions differ in URL.path for opaque URLs such as about:blank.
+        // Match the exact offline document and fragment delimiter, without accepting queries.
+        url.absoluteString.hasPrefix("about:blank#")
     }
 }

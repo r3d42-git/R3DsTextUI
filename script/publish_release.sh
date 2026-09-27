@@ -19,6 +19,8 @@ REMOTE="$(git remote get-url origin)"
 (cd "$OUT" && shasum -a 256 -c "$NAME.sha256")
 "$ROOT_DIR/script/verify_release.sh" "$VERSION" "$OUT/$NAME"
 [[ -f "release-notes/$TAG.md" ]]
+CI_RESULT="$(gh run list --repo "$REPO" --workflow ci.yml --branch main --event push --commit "$(git rev-parse HEAD)" --limit 1 --json conclusion --jq '.[0].conclusion')"
+[[ "$CI_RESULT" == success ]] || { echo 'Push this source commit to main and wait for successful CI before publication.' >&2; exit 1; }
 if [[ "$DRY_RUN" == 1 ]]; then echo 'Dry-run passed; no remote changes.'; exit 0; fi
 git push -u origin main
 git tag -a "$TAG" -m "TextUI $VERSION"

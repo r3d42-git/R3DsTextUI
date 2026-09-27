@@ -119,3 +119,25 @@ Validierung: insgesamt 48 Tests bestanden (41 Core + sieben native), inklusive U
 Release-Skripte, GPL-Lizenz samt explizitem „oder später“, README und Versionshinweise ergänzt. App-Icon einschließlich Quellen vorhanden und im Bundle enthalten. Lokale Entwicklungsdateien `.local`, `.build` und `dist` bleiben ignoriert. Die Sandbox konnte Schlüsselbund und GitHub nicht erreichen; identische Prüfungen im freigegebenen lokalen Kontext bestätigten gültige Developer-ID-Identität und funktionierendes Profil `TextUI`. Keine Änderung an Schlüsselbund oder globalen Einstellungen nötig.
 
 Noch nicht belegt: Start auf einem fremden/sauberen Mac, echte macOS-15-Laufzeit und Rechnerneustart. Frühere UI-Prüfungen oben gelten weiterhin nur für die jeweils getesteten Abläufe.
+
+## Veröffentlichter Release 0.1.0 – 2026-09-27
+
+- Öffentliches Repository: https://github.com/r3d42-git/R3DsTextUI ; Lizenz GPL-3.0-or-later, von GitHub als GNU GPLv3 erkannt.
+- Unveränderlicher Tag `v0.1.0`: Releasecommit `57a7776bd6d6fb0b69db53c5b0dc95956e76d99a`. Spätere Dokumentationscommits bewegen den Tag nicht.
+- Release: https://github.com/r3d42-git/R3DsTextUI/releases/tag/v0.1.0 (öffentlich, kein Draft/Prerelease).
+- Asset: https://github.com/r3d42-git/R3DsTextUI/releases/download/v0.1.0/TextUI-0.1.0-macOS-arm64.zip ; SHA-256-Datei daneben.
+- ZIP SHA-256: `16a86a46446b5d8a2023a239908f593c80336539ca5f80a3cce0751a91315856`.
+- Version 0.1.0, Build 1, arm64, macOS 15+, Bundle-ID `com.r3d42.textui`.
+- Signatur: Developer ID Application, Philipp John Hild, Team `G6JH37W285`, sicherer Zeitstempel und Hardened Runtime.
+- Apple-Submission `a0e4cf06-6306-42b1-aff0-004f2f0d438a`: `Accepted`. App vor Erstellung des finalen ZIP gestapelt.
+- Lokal und aus frischem GitHub-Download: ZIP-Integrität, strict codesign, Identität, Version, Architektur, Lizenzdateien, stapler validate und Gatekeeper erfolgreich. Gatekeeper: `Notarized Developer ID`.
+- Heruntergeladenes ZIP, lokale SHA-256-Datei und GitHub-Asset-Digest stimmen überein.
+- 48 automatisierte Tests bestanden (41 Core, 7 native Editor-/Vorschautests). Prüfung auf typische Geheimnis-/Privatpfadmuster ohne Befund, `git diff --check` sauber. Eine überflüssige Schlussleerzeile im unverändert inhaltlich übernommenen Drittanbieter-NOTICE entfernt.
+- Release-Skripte akzeptieren keine ungültigen Versionsangaben; negative Eingabeprüfung und vollständiger Publish-Dry-run bestanden.
+- Kein Start auf sauberem fremden Mac und keine echte macOS-15-Laufzeitprüfung. Laufende lokale Entwicklung und Nutzersitzung wurden für den Release nicht ersetzt.
+
+## macOS-15-Korrektur nach erstem CI-Lauf
+
+Die Läufe https://github.com/r3d42-git/R3DsTextUI/actions/runs/36320053188 und https://github.com/r3d42-git/R3DsTextUI/actions/runs/36320054213 zeigten genau einen Fehler: `PreviewLinksTests.testAnchorsStayInOfflineDocument`. Foundation liefert für die opaque URL `about:blank#section` unter macOS 15 einen anderen `path` als lokal. Der Ankercheck prüft nun die exakte serialisierte Offline-Dokumentadresse mit Fragmenttrenner. Query-, Host- und andere Pfadvarianten bleiben blockiert; zusätzliche Grenzfälle sind getestet. Kein Test übersprungen.
+
+Produktversion auf 0.1.1 (Build 2) erhöht; v0.1.0 und dessen Asset bleiben unverändert. Vor Veröffentlichung von 0.1.1 wird zusätzlich zum lokalen Gate der CI-Erfolg des Quellcommits abgewartet.
