@@ -1,5 +1,4 @@
 import XCTest
-import CoreFoundation
 @testable import TextUICore
 
 final class PreviewLinksTests: XCTestCase {
@@ -15,15 +14,17 @@ final class PreviewLinksTests: XCTestCase {
     }
 
     func testAnchorsStayInOfflineDocument() throws {
-        for text in ["about:blank#section", "about:blank#", "about:blank#section?text", "about:blank#caf%C3%A9"] {
-            // WebKit supplies native URLs; Swift URL constructors on macOS 15
-            // rewrite the fragment delimiter in opaque URLs as %23.
-            let url = try XCTUnwrap(CFURLCreateWithString(nil, text as CFString, nil)) as URL
-            XCTAssertEqual(url.absoluteString, text)
-            XCTAssertTrue(PreviewLinks.isDocumentAnchor(url), "input=\(text), serialized=\(url.absoluteString), path=\(url.path), fragment=\(String(describing: url.fragment))")
+        for fragment in ["section", "", "section?text", "caf%C3%A9"] {
+            let url = try XCTUnwrap(URL(string: "https://textui-preview.invalid/#" + fragment))
+            XCTAssertTrue(PreviewLinks.isDocumentAnchor(url), url.absoluteString)
+            XCTAssertNil(PreviewLinks.browserURL(url))
         }
-        for text in ["https://example.com/#section", "about:blank", "about:other#section", "about:blank?query#section", "about:blank/other#section", "about://blank#section", "about:blank%23section"] {
-            XCTAssertFalse(PreviewLinks.isDocumentAnchor(try XCTUnwrap(CFURLCreateWithString(nil, text as CFString, nil)) as URL), text)
+        for text in ["https://example.com/#section", "about:blank#section",
+                     "https://textui-preview.invalid/", "https://other.invalid/#section",
+                     "https://textui-preview.invalid/?query#section", "https://textui-preview.invalid/other#section",
+                     "https://textui-preview.invalid:123/#section", "https://user@textui-preview.invalid/#section",
+                     "https://textui-preview.invalid/%23section"] {
+            XCTAssertFalse(PreviewLinks.isDocumentAnchor(try XCTUnwrap(URL(string: text))), text)
         }
     }
 }

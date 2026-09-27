@@ -573,7 +573,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.previewGeneration == generation, self.previewVisible else { return }
                 let policy = "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; form-action 'none'; base-uri 'none'; script-src 'none'\">"
-                self.webView.loadHTMLString(policy + rendered, baseURL: nil)
+                self.webView.loadHTMLString(policy + rendered, baseURL: PreviewLinks.documentURL)
             }
         }
         previewWork = work
@@ -581,7 +581,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
     }
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         guard let url = navigationAction.request.url else { decisionHandler(.cancel); return }
-        if navigationAction.navigationType == .other && url.absoluteString == "about:blank" {
+        if navigationAction.navigationType == .other && (url.absoluteString == "about:blank" || url == PreviewLinks.documentURL) {
             decisionHandler(.allow)
             return
         }
@@ -609,7 +609,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
             }
         }
     }
-    @objc func about() { NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "TextUI", .applicationVersion: "0.1.0 · Erster Entwurf", .credits: NSAttributedString(string: "Ein schlanker, lokaler Texteditor für macOS.")]) }
+    @objc func about() { NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "TextUI", .applicationVersion: (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Entwicklung"), .credits: NSAttributedString(string: "Ein schlanker, lokaler Texteditor für macOS.")]) }
     func showError(_ error: Error) { let alert = NSAlert(error: error); alert.runModal() }
     func showMessage(_ title: String, _ detail: String) { let alert = NSAlert(); alert.messageText = title; alert.informativeText = detail; alert.runModal() }
 }

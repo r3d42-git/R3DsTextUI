@@ -2,6 +2,7 @@ import AppKit
 import WebKit
 import XCTest
 @testable import TextUI
+import TextUICore
 
 final class PreviewCodeCopyTests: XCTestCase {
     @MainActor
@@ -15,6 +16,30 @@ final class PreviewCodeCopyTests: XCTestCase {
         XCTAssertEqual(pasteboard.string(forType: .string), text)
         XCTAssertFalse(PreviewCodeCopy.copy(String(repeating: "x", count: PreviewCodeCopy.maximumCopyBytes + 1), to: pasteboard))
         XCTAssertEqual(pasteboard.string(forType: .string), text)
+    }
+
+    @MainActor
+    func testPreviewBaseResolvesAnchorsWithoutNetwork() async throws {
+        let config = WKWebViewConfiguration()
+        config.defaultWebpagePreferences.allowsContentJavaScript = false
+        let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 600, height: 400), configuration: config)
+        let loaded = expectation(description: "Offline preview loaded")
+        let navigation = NavigationObserver { loaded.fulfill() }
+        webView.navigationDelegate = navigation
+        webView.loadHTMLString("""
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; base-uri 'none'">
+        <a href="#section">Section</a><h2 id="section">Heading</h2>
+        """, baseURL: PreviewLinks.documentURL)
+        await fulfillment(of: [loaded], timeout: 10)
+        let value: Any = try await withCheckedThrowingContinuation { continuation in
+            webView.evaluateJavaScript("document.querySelector('a').href", in: nil, in: .defaultClient) { result in
+                continuation.resume(with: result)
+            }
+        }
+        let destination = try XCTUnwrap(value as? String)
+        XCTAssertEqual(destination, "https://textui-preview.invalid/#section")
+        XCTAssertTrue(PreviewLinks.isDocumentAnchor(try XCTUnwrap(URL(string: destination))))
+        XCTAssertEqual(webView.url, PreviewLinks.documentURL)
     }
 
     @MainActor

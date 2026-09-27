@@ -143,3 +143,19 @@ Die Läufe https://github.com/r3d42-git/R3DsTextUI/actions/runs/36320053188 und 
 Produktversion auf 0.1.1 (Build 2) erhöht; v0.1.0 und dessen Asset bleiben unverändert. Vor Veröffentlichung von 0.1.1 wird zusätzlich zum lokalen Gate der CI-Erfolg des Quellcommits abgewartet.
 
 Diagnose nach dem zweiten CI-Fehler: Der Runner serialisiert `URL(string: "about:blank#section")` tatsächlich als `about:blank%23section`, mit leerem path und ohne fragment (Lauf 36320292740). Der Test baut die WebKit-URL deshalb nun aus ihrer unveränderten Datenrepräsentation und prüft zusätzlich die bytegetreue absoluteString-Darstellung. Prozentkodierte Trenner bleiben ausdrücklich ausgeschlossen. Der Produktionscheck bleibt auf echte `about:blank#`-Adressen begrenzt. Die neue CI-Sperre hat die verfrühte Veröffentlichung von 0.1.1 im Dry-run nachweislich verhindert.
+
+## Endgültige Behebung: hierarchische Offline-Adresse
+
+Auch Daten- und CoreFoundation-Konstruktoren kodieren auf dem macOS-15-Runner den Trenner beim Swift-URL-Übergang um. Statt weiterer Konstruktorvarianten verwendet die Vorschau jetzt `https://textui-preview.invalid/` als interne Basisadresse für `loadHTMLString`. Die reservierte .invalid-Adresse dient nur als Dokumentbasis; HTML wird direkt übergeben und die CSP blockiert Netzwerkzugriff. Echte Fragmente werden anhand von Schema, Host, Pfad, fehlenden Zugangsdaten/Port/Query und vorhandenem Fragment geprüft. Andere Ziele bleiben blockiert bzw. echte Weblinks bestätigungspflichtig. Ein neuer WKWebView-Test prüft die tatsächlich geladene Dokumentadresse und aufgelöste Ankeradresse unter derselben Offline-CSP und mit abgeschalteten Dokumentskripten. Die About-Anzeige übernimmt die Version jetzt aus dem Bundle statt aus einem festen 0.1.0-Text.
+
+## Offener Abschluss nach Hinweis auf GitHub-Fehlermails
+
+Die abschließende lokale Änderung mit hierarchischer .invalid-Vorschauadresse besteht alle 49 Tests (41 Core, 8 native Tests einschließlich realer WebView/Ankerauflösung); `git diff --check` bestanden. Diese Änderung ist noch NICHT committed oder gepusht. GitHub-CI-Erfolg ist dafür noch nicht belegt.
+
+Der Nutzer meldete die vielen CI-Fehlermails. Die automatische Freigabeprüfung blockierte daraufhin Commit/Push der fertigen Korrektur, weil dadurch ein weiterer CI-Lauf mit möglichen Benachrichtigungen ausgelöst würde; erneute Nutzerzustimmung ist erforderlich. Kein Umgehen der Sperre. Öffentlicher main-Stand beim Stopp: `972be953999137cf30227d21162182285b139e88`; letzter CI-Lauf 36320551905 fehlgeschlagen. Öffentlicher Release bleibt v0.1.0. Die vorhandenen lokalen 0.1.1-Artefakte stammen von früheren Quellständen und dürfen NICHT als fertige Korrektur veröffentlicht werden.
+
+Nach Zustimmung: lokale Korrektur committen/pushen, exakt diesen CI-Lauf erfolgreich abwarten, älteren unveröffentlichten 0.1.1-Ausgabeordner erhalten/verschieben, finalen sauberen Quellcommit über release.sh neu bauen/signieren/notarisieren, publish --dry-run und Veröffentlichung samt Downloadprüfung ausführen. Release-Tag 0.1.0 nicht verändern. Abschließend die exakten 0.1.1-Nachweise dokumentieren und sauberen synchronen Git-Stand prüfen.
+
+## Fortsetzung freigegeben
+
+Der Nutzer hat den Push der neuen Version einschließlich weiterem CI-Lauf und Veröffentlichung von 0.1.1 ausdrücklich bestätigt. Die vorstehende Freigabesperre ist damit aufgehoben. Der bereits lokal mit 49 erfolgreichen Tests geprüfte Stand wird committed und gepusht; Veröffentlichung erfolgt erst nach erfolgreicher CI-Prüfung desselben Commits.

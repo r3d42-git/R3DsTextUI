@@ -18,7 +18,7 @@ Zur Installation das Release-ZIP entpacken und `TextUI.app` in den Programme-Ord
 - Bewusstes Speichern mit `⌘S`, laufende lokale Entwurfssicherung und optionales automatisches Speichern bereits benannter Dateien.
 - Zuschaltbare Markdown-, DokuWiki- und HTML-Vorschau (⌥⌘P) neben dem Quelltext. Markdown unterstützt unter anderem Tabellen, Aufgabenlisten und Codeblöcke. Aktualisierung nach kurzer Schreibpause; Dokumentskripte und Netzwerkzugriff sind deaktiviert. Weblinks öffnen sich erst nach Rückfrage im Standardbrowser; Code lässt sich per Kopierknopf übernehmen.
 
-48 automatisierte Core- und Editortests bestehen; Start, grundlegende Bearbeitung, Suche, Entwurfswiederherstellung und eine HTML-Datei mit 2.500 Zeilen wurden lokal geprüft. Weitere Details und offene Prüfungen stehen in `PROJECT_SUMMARY.md`.
+49 automatisierte Core- und Editortests bestehen; Start, grundlegende Bearbeitung, Suche, Entwurfswiederherstellung und eine HTML-Datei mit 2.500 Zeilen wurden lokal geprüft. Weitere Details und offene Prüfungen stehen in `PROJECT_SUMMARY.md`.
 
 Die Entwurfssicherung ersetzt keine externe Datensicherung. Insbesondere Dateikonflikte, Wiederherstellung nach Abstürzen und die Bedienung bleiben Gegenstand weiterer Tests.
 
