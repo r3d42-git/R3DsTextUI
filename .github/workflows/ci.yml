@@ -1,0 +1,25 @@
+name: macOS build and tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Toolchain
+        run: swift --version
+      - name: Test core
+        run: swift test --arch arm64
+      - name: Build local app bundle
+        run: ./script/build_and_run.sh --build-only
+      - name: Verify Apple Silicon binary
+        run: test "$(lipo -archs dist/TextUI.app/Contents/MacOS/TextUI)" = arm64
