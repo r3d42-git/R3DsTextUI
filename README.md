@@ -1,5 +1,7 @@
 # TextUI
 
+**Deutsch** · [English](README.en.md)
+
 Ein schlanker, nativer Texteditor für macOS 15 und neuer auf Apple Silicon.
 TextUI konzentriert sich auf `.txt`, `.md` und `.html`, mehrere Dateien in Tabs und zuverlässige Wiederherstellung ungespeicherter Arbeit.
 
