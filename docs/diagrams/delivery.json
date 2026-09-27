@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "architecture",
+  "input": "docs/diagrams/architecture.json",
+  "output": "docs/index.html",
+  "specification": {
+    "sha256": "4925d040442836d70159e5f0b1bb0a438c9155a42d9a86435dece6a680a0e7b0",
+    "bytes": 5599
+  },
+  "artifact": {
+    "sha256": "78541beb53bef2066aab3e8d5e7e10c647ebfc3067b6f04bc39b88e9c6b9f134",
+    "bytes": 812869
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  },
+  "evidence": {
+    "verified": true,
+    "repository": "https://github.com/r3d42-git/R3DsTextUI",
+    "revision": "73adb159cf5579e12d25bb16bd4c21d1ea8dd4b3",
+    "references": 10
+  }
+}

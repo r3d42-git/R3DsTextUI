@@ -1,0 +1,296 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TextUI \u00b7 Local-first architecture",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1240,
+      640
+    ],
+    "repository": {
+      "url": "https://github.com/r3d42-git/R3DsTextUI",
+      "revision": "73adb159cf5579e12d25bb16bd4c21d1ea8dd4b3",
+      "provider": "github",
+      "link_mode": "web"
+    }
+  },
+  "components": [
+    {
+      "id": "editor",
+      "type": "frontend",
+      "label": "Native editor",
+      "sublabel": "AppKit \u00b7 NSTextView",
+      "pos": [
+        35,
+        275
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "Sources/TextUI/EditorPane.swift",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "controller",
+      "type": "backend",
+      "label": "App controller",
+      "sublabel": "Tabs \u00b7 commands \u00b7 drafts",
+      "pos": [
+        355,
+        275
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "Sources/TextUI/AppController.swift",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "renderers",
+      "type": "backend",
+      "label": "Preview renderers",
+      "sublabel": "Markdown \u00b7 DokuWiki \u00b7 HTML",
+      "pos": [
+        675,
+        275
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "Sources/TextUI/AppController.swift",
+          "line": 567
+        }
+      ]
+    },
+    {
+      "id": "webview",
+      "type": "frontend",
+      "label": "Offline preview",
+      "sublabel": "WKWebView \u00b7 restricted CSP",
+      "pos": [
+        995,
+        275
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "Sources/TextUI/AppController.swift",
+          "line": 573
+        }
+      ]
+    },
+    {
+      "id": "syntax",
+      "type": "backend",
+      "label": "Syntax engine",
+      "sublabel": "Async tokens \u00b7 version check",
+      "pos": [
+        35,
+        65
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "Sources/TextUI/EditorPane.swift",
+          "line": 174
+        }
+      ]
+    },
+    {
+      "id": "session",
+      "type": "database",
+      "label": "Session recovery",
+      "sublabel": "Local Session.json",
+      "pos": [
+        355,
+        65
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "Sources/TextUICore/Documents.swift",
+          "line": 100
+        }
+      ]
+    },
+    {
+      "id": "files",
+      "type": "database",
+      "label": "Document files",
+      "sublabel": "Encoding \u00b7 conflict check",
+      "pos": [
+        355,
+        505
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "Sources/TextUICore/Documents.swift",
+          "line": 86
+        }
+      ]
+    },
+    {
+      "id": "search",
+      "type": "backend",
+      "label": "Search & outline",
+      "sublabel": "TextUICore \u00b7 UTF-16 ranges",
+      "pos": [
+        675,
+        505
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "Sources/TextUI/AppController.swift",
+          "line": 489
+        }
+      ]
+    },
+    {
+      "id": "browser",
+      "type": "external",
+      "label": "Default browser",
+      "sublabel": "Confirmed HTTP(S) links",
+      "pos": [
+        995,
+        65
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "Sources/TextUI/AppController.swift",
+          "line": 597
+        }
+      ]
+    },
+    {
+      "id": "clipboard",
+      "type": "external",
+      "label": "System clipboard",
+      "sublabel": "Isolated app-owned script",
+      "pos": [
+        995,
+        505
+      ],
+      "size": [
+        210,
+        72
+      ],
+      "sources": [
+        {
+          "path": "Sources/TextUI/PreviewCodeCopy.swift",
+          "line": 11
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "to": "controller",
+      "label": "Edit events",
+      "from": "editor"
+    },
+    {
+      "to": "renderers",
+      "label": "Async render",
+      "from": "controller"
+    },
+    {
+      "to": "webview",
+      "label": "HTML + policy",
+      "from": "renderers"
+    },
+    {
+      "to": "syntax",
+      "label": "Tokenize",
+      "from": "editor"
+    },
+    {
+      "to": "session",
+      "label": "Checkpoint",
+      "from": "controller"
+    },
+    {
+      "to": "files",
+      "label": "Explicit save",
+      "from": "controller",
+      "labelDy": 70
+    },
+    {
+      "to": "search",
+      "label": "Query text",
+      "from": "controller"
+    },
+    {
+      "to": "browser",
+      "label": "Confirm link",
+      "from": "webview"
+    },
+    {
+      "to": "clipboard",
+      "label": "Copy code",
+      "from": "webview",
+      "labelDy": 70
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Native, local-first",
+      "items": [
+        "SwiftPM: TextUI + TextUICore",
+        "macOS 15+ \u00b7 Apple Silicon"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Two persistence paths",
+      "items": [
+        "Save checks the on-disk baseline",
+        "Draft recovery is independent of Save"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Preview boundary",
+      "items": [
+        "Document scripts and network blocked",
+        "Only confirmed web links leave the app"
+      ]
+    }
+  ]
+}

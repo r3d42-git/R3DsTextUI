@@ -7,7 +7,7 @@ TextUI focuses on `.txt`, `.md`, and `.html` files, multiple documents in tabs, 
 
 **Status: early release 0.1.1.** A public project licensed under **GPL-3.0-or-later**. Display name: **TextUI**; bundle name: **R3Ds TextUI**; stable bundle identifier: `com.r3d42.textui`.
 
-[Downloads and release notes](https://github.com/r3d42-git/R3DsTextUI/releases) · [License](LICENSE) · [Licensing scope and third-party components](LICENSING.md)
+[Downloads and release notes](https://github.com/r3d42-git/R3DsTextUI/releases) · [License](LICENSE) · [Licensing scope and third-party components](LICENSING.md) · [Interactive architecture](https://r3d42-git.github.io/R3DsTextUI/)
 
 To install, extract the release ZIP and drag `TextUI.app` into Applications. Only Apple Silicon Macs running macOS 15 or later are supported. Public release packages use Developer ID signing with Hardened Runtime, are notarized by Apple, and contain the app with its notarization ticket stapled to it.
 
