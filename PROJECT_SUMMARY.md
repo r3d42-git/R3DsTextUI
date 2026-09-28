@@ -1,6 +1,6 @@
 # TextUI – Projektstand und Übergabe
 
-Stand: 2026-09-28. JSON-Unterstützung vom Nutzer bestätigt. Vollständiger Release 0.1.2 einschließlich Dokumentation/Archify, Commit, Push, Signierung, Notarisierung und Veröffentlichung autorisiert; Vorbereitung läuft. Die älteren Abschnitte dokumentieren den historischen Entwicklungsstand.
+Stand: 2026-09-28. JSON-Unterstützung vom Nutzer bestätigt; TextUI 0.1.2 (Build 3) öffentlich veröffentlicht und anhand eines frischen Downloads verifiziert. Beschreibung, deutsche/englische README und Archify-Seite sind aktualisiert. Die älteren Abschnitte dokumentieren den historischen Entwicklungsstand.
 
 ## Vereinbarter Produktumfang
 
@@ -184,3 +184,21 @@ Die Vorschau (⌥⌘P) validiert JSON und rückt es lesbar ein, ohne den Editori
 Validierung: `swift test --arch arm64` mit 55 bestandenen Tests (47 Core, 8 native); sechs neue JSON-Tests prüfen Formatierung, ungültige Eingaben, Unicode/UTF-16-Tokenpositionen, HTML-Escaping, Präzision und Öffnen/Bearbeiten/Speichern/Session-Roundtrip mit UTF-16-BOM/CRLF. Lokales arm64-Bundle gebaut, plist und Ad-hoc-Signatur geprüft. Reale App: JSON über Öffnen-Dialog geladen, Syntaxfarben/formatierte Vorschau einschließlich großer Zahl und literalem HTML sichtbar geprüft; eingefügtes Komma erzeugt Fehlermeldung, Änderung rückgängig gemacht und Testtab geschlossen. Bestehende Nutzertabs erhalten. Laufende App ist `dist/TextUI.app`; `/Applications/TextUI.app` wurde nicht ersetzt. Keine Veröffentlichung oder neue Release-Version.
 
 Nutzerabnahme am 2026-09-28: „funktioniert“. Anschließend vollständige Veröffentlichung inklusive Doku und Archify beauftragt. Die erste JSON-Implementierung oben beschreibt den Stand vor dieser Releasevorbereitung.
+
+## Abgeschlossen: öffentlicher Release 0.1.2 – 2026-09-28
+
+- Nutzerauftrag: vollständiger Weg von Commit/Push bis Release samt Beschreibung, Doku und Archify. JSON-Funktion zuvor vom Nutzer bestätigt.
+- Implementierungscommit: `4a90c64e67d5fc52b7861e375b01907dca56f409`; darauf sind die zwölf Quellverweise der Archify-Seite festgesetzt.
+- Unveränderlicher Tag `v0.1.2` auf Releasecommit `084765d6cd1dfcbaa2ad7184afcf43345fd68230` einschließlich der geprüften Archify-Dokumentation.
+- Release: https://github.com/r3d42-git/R3DsTextUI/releases/tag/v0.1.2 ; öffentlich, kein Draft/Prerelease.
+- Asset: https://github.com/r3d42-git/R3DsTextUI/releases/download/v0.1.2/TextUI-0.1.2-macOS-arm64.zip ; SHA-256-Datei daneben.
+- ZIP SHA-256: `3316df5f507d7147312bccfca1d2e8aad3d4f024ed7ab81dc9cf683f598f9b81`.
+- Version 0.1.2, Build 3, arm64, macOS 15+, Bundle-ID `com.r3d42.textui`, GPL-3.0-or-later.
+- Erfolgreiche CI des exakten Releasecommits vor Veröffentlichung: https://github.com/r3d42-git/R3DsTextUI/actions/runs/36449061063 . Tests, App-Bundlebuild und arm64-Prüfung unter macOS 15 bestanden. Lokal alle 55 Tests (47 Core, 8 native) im Releaseablauf erneut bestanden.
+- Apple-Submission `debd8cfa-130d-4475-8de6-b24de6806f16`: `Accepted`. Developer ID Application: Philipp John Hild, Team `G6JH37W285`, Hardened Runtime, sicherer Zeitstempel und vor der finalen ZIP-Erstellung angeheftetes App-Ticket.
+- Publish-Dry-run bestanden. Frischer GitHub-Download stimmt mit lokaler Prüfsumme und GitHub-Asset-Digest überein. ZIP-Integrität, strict codesign, Identität/Version/Architektur/Lizenzdateien, stapler validate und Gatekeeper erfolgreich. Gatekeeper: `Notarized Developer ID`.
+- GitHub-Projektbeschreibung nennt jetzt JSON. Deutsche/englische README, Release Notes und Bundle-Dateitypen aktualisiert.
+- Archify: https://r3d42-git.github.io/R3DsTextUI/ ; Pages-Lauf https://github.com/r3d42-git/R3DsTextUI/actions/runs/36449061091 erfolgreich. Öffentlich abgerufenes HTML ist bytegleich mit dem geprüften lokalen Artefakt.
+- Architektur-Spezifikation SHA-256: `15bccc5f2242fc273815a0ef83b88e4e98f3a8e7724a241536c16941f9e1d4af`; HTML SHA-256: `e6c8f01259f81502c1e6a453ebb778b375235230d92d42e34ac032801434ded1`. Archify: 9/9 Showcase, 0 Fehler/Warnungen, Browsernachweise bestanden bei 1440×900, 1600×1000, 1920×1080 und 2048×1320; helle/dunkle Screenshots visuell geprüft. Keine Geometriekorrekturen in dieser Aktualisierung. Receipts unter `docs/diagrams/delivery.json` und `docs/index.visual-check.json`.
+- Grenzen: kein Start auf sauberem fremden Mac, kein vollständiger manueller macOS-15-Abnahmetest, kein Rechnerneustart. `/Applications/TextUI.app` wurde nicht ersetzt. Bestehende Nutzersitzung und ältere Releases bleiben erhalten.
+- Dieser Nachweis wird als separater Dokumentationscommit mit `[skip ci]` nachgeführt; der veröffentlichte Tag bleibt unverändert.
