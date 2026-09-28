@@ -1,14 +1,14 @@
 # TextUI – Projektstand und Übergabe
 
-Stand: 2026-09-27. Öffentliche Erstveröffentlichung vom Nutzer autorisiert: Repository, Commit/Push, GPL-Lizenz sowie Signierung und Notarisierung. Die älteren Abschnitte dokumentieren den historischen Entwicklungsstand.
+Stand: 2026-09-28. JSON-Unterstützung vom Nutzer bestätigt. Vollständiger Release 0.1.2 einschließlich Dokumentation/Archify, Commit, Push, Signierung, Notarisierung und Veröffentlichung autorisiert; Vorbereitung läuft. Die älteren Abschnitte dokumentieren den historischen Entwicklungsstand.
 
 ## Vereinbarter Produktumfang
 
 Native macOS-App ab macOS 15, Apple Silicon only. Sichtbarer Name **TextUI**, `CFBundleName` **R3Ds TextUI**, stabile Bundle-ID `com.r3d42.textui`.
 
-Fokus: `.txt`, `.md`, `.html`, automatische Formatwahl nach Dateiendung, Tabs, Zeilennummern, Navigation in langen Dokumenten, schnell erreichbare Schriftgröße und Zeilenumbruch, Cursorstatus, leistungsfähige Suche und Ersetzen. Typische längere Nutzerdateien liegen bei rund 2.500 HTML-Zeilen.
+Fokus: `.txt`, `.md`, `.html`, `.json`, automatische Formatwahl nach Dateiendung, Tabs, Zeilennummern, Navigation in langen Dokumenten, schnell erreichbare Schriftgröße und Zeilenumbruch, Cursorstatus, leistungsfähige Suche und Ersetzen. Typische längere Nutzerdateien liegen bei rund 2.500 HTML-Zeilen.
 
-Vorschau ist erwünscht, darf den Editor jedoch nicht überladen. Die lokale Vorschau unterstützt HTML und Markdown ohne JavaScript oder Netzwerkzugriff. Synchrones Vorschau-Scrollen und umfassendere Vorschau-Ressourcenverwaltung können später folgen.
+Vorschau ist erwünscht, darf den Editor jedoch nicht überladen. Die lokale Vorschau unterstützt HTML, Markdown, DokuWiki und JSON ohne Dokumentskripte oder Netzwerkzugriff. Synchrones Vorschau-Scrollen und umfassendere Vorschau-Ressourcenverwaltung können später folgen.
 
 ## Verbindliche Speicherregeln
 
@@ -31,7 +31,7 @@ Swift Package mit AppKit-Executable `TextUI`, einer `TextUICore`-Bibliothek und 
 
 Der Nutzer hat am 2026-09-27 das öffentliche Repository `r3d42-git/R3DsTextUI`, Commit und Push aller Projektänderungen sowie die signierte und notarisierte Distribution autorisiert. Lizenz: GPL-3.0-or-later; Drittanbieterhinweise bleiben erhalten. Keine Nutzerdateien, echten Entwürfe, Tokens oder privaten Schlüssel einchecken.
 
-Releaseprofil: SwiftPM, `main`, Version 0.1.1 (Build 2), Apple Silicon arm64, macOS 15+, Bundle-ID `com.r3d42.textui`. Lokale Developer-ID-Signierung mit Hardened Runtime, Schlüsselbundprofil `TextUI`. `script/release.sh` erzeugt das ZIP erst nach angenommener Notarisierung und Stapling der App. `verify_release.sh` prüft die frisch entpackte App; `publish_release.sh` prüft Quellcommit, freien Tag, öffentliches Repository und den späteren GitHub-Download samt Digest. CI baut und testet ohne Signiergeheimnisse.
+Releaseprofil: SwiftPM, `main`, Version 0.1.2 (Build 3), Apple Silicon arm64, macOS 15+, Bundle-ID `com.r3d42.textui`. Lokale Developer-ID-Signierung mit Hardened Runtime, Schlüsselbundprofil `TextUI`. `script/release.sh` erzeugt das ZIP erst nach angenommener Notarisierung und Stapling der App. `verify_release.sh` prüft die frisch entpackte App; `publish_release.sh` prüft Quellcommit, freien Tag, öffentliches Repository und den späteren GitHub-Download samt Digest. CI baut und testet ohne Signiergeheimnisse.
 
 ## Validierung am 2026-09-27
 
@@ -174,3 +174,13 @@ Der Nutzer hat den Push der neuen Version einschließlich weiterem CI-Lauf und V
 - Die ältere Version 0.1.0 wurde weder verändert noch entfernt. Ältere unveröffentlichte 0.1.1-Builds liegen getrennt unter dem ignorierten `.local/`; nur `dist/release/0.1.1` gehört zum finalen Releasecommit.
 - Grenzen: kein Start auf einem sauberen fremden Mac, kein manueller vollständiger macOS-15-App-Abnahmetest und kein echter Rechnerneustart. CI-Tests unter macOS 15 sind davon getrennte Evidenz.
 - Diese abschließende Dokumentation wird separat mit `[skip ci]` committed, um für reine Nachweise keinen weiteren identischen Build auszulösen. Der Releasecommit bleibt durch den erfolgreichen CI-Lauf belegt.
+
+## JSON-Unterstützung – 2026-09-28
+
+`.json` (auch Großschreibung) wird als JSON erkannt, im Öffnen-Dialog angeboten und als bearbeitbarer Dateityp im Bundle registriert. Syntaxfarben unterscheiden Schlüssel, Strings, Zahlen, Boolesche Werte/null und Interpunktion. Bestehende Speicher-, Kodierungs-, Konflikt- und Entwurfsregeln gelten unverändert; auch unvollständiges JSON lässt sich speichern.
+
+Die Vorschau (⌥⌘P) validiert JSON und rückt es lesbar ein, ohne den Editorinhalt zu verändern. Der lexikalische Formatter erhält Schlüsselreihenfolge, doppelte Schlüssel, große Zahlen, Exponentenschreibweisen und String-Escapes. HTML in Strings wird escaped; bestehende Offline-CSP und Codekopie bleiben aktiv. Fehler erscheinen mit Zeile/Spalte statt einer veralteten Vorschau. Vorschautiefe auf 256 Ebenen begrenzt; keine JSONC-Kommentare oder nachgestellten Kommas.
+
+Validierung: `swift test --arch arm64` mit 55 bestandenen Tests (47 Core, 8 native); sechs neue JSON-Tests prüfen Formatierung, ungültige Eingaben, Unicode/UTF-16-Tokenpositionen, HTML-Escaping, Präzision und Öffnen/Bearbeiten/Speichern/Session-Roundtrip mit UTF-16-BOM/CRLF. Lokales arm64-Bundle gebaut, plist und Ad-hoc-Signatur geprüft. Reale App: JSON über Öffnen-Dialog geladen, Syntaxfarben/formatierte Vorschau einschließlich großer Zahl und literalem HTML sichtbar geprüft; eingefügtes Komma erzeugt Fehlermeldung, Änderung rückgängig gemacht und Testtab geschlossen. Bestehende Nutzertabs erhalten. Laufende App ist `dist/TextUI.app`; `/Applications/TextUI.app` wurde nicht ersetzt. Keine Veröffentlichung oder neue Release-Version.
+
+Nutzerabnahme am 2026-09-28: „funktioniert“. Anschließend vollständige Veröffentlichung inklusive Doku und Archify beauftragt. Die erste JSON-Implementierung oben beschreibt den Stand vor dieser Releasevorbereitung.

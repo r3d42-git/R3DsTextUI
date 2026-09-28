@@ -1,11 +1,12 @@
 import Foundation
 
 public enum DocumentFormat: String, Codable, Sendable {
-    case text = "Text", markdown = "Markdown", html = "HTML", dokuwiki = "DokuWiki"
+    case text = "Text", markdown = "Markdown", html = "HTML", dokuwiki = "DokuWiki", json = "JSON"
     public init(url: URL?, text: String = "") {
         switch url?.pathExtension.lowercased() {
         case "md", "markdown": self = .markdown
         case "html", "htm": self = .html
+        case "json": self = .json
         case "wiki", "dokuwiki": self = .dokuwiki
         case "txt", "", nil: self = DokuWikiSyntax.isLikelyDocument(text) ? .dokuwiki : .text
         default: self = .text

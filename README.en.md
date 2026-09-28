@@ -3,9 +3,9 @@
 [Deutsch](README.md) · **English**
 
 A lightweight native text editor for macOS 15 and later on Apple Silicon.
-TextUI focuses on `.txt`, `.md`, and `.html` files, multiple documents in tabs, and reliable recovery of unsaved work.
+TextUI focuses on `.txt`, `.md`, `.html`, and `.json` files, multiple documents in tabs, and reliable recovery of unsaved work.
 
-**Status: early release 0.1.1.** A public project licensed under **GPL-3.0-or-later**. Display name: **TextUI**; bundle name: **R3Ds TextUI**; stable bundle identifier: `com.r3d42.textui`.
+**Status: early release 0.1.2.** A public project licensed under **GPL-3.0-or-later**. Display name: **TextUI**; bundle name: **R3Ds TextUI**; stable bundle identifier: `com.r3d42.textui`.
 
 [Downloads and release notes](https://github.com/r3d42-git/R3DsTextUI/releases) · [License](LICENSE) · [Licensing scope and third-party components](LICENSING.md) · [Interactive architecture](https://r3d42-git.github.io/R3DsTextUI/)
 
@@ -13,14 +13,14 @@ To install, extract the release ZIP and drag `TextUI.app` into Applications. Onl
 
 ## Current features
 
-- Native AppKit text editing, automatic format detection by file extension, and DokuWiki detection based on the contents of `.txt` files. Syntax highlighting for Markdown, DokuWiki, and HTML, including embedded CSS. A dark blue editor palette in dark mode and a matching light palette in light mode.
+- Native AppKit text editing, automatic format detection by file extension, and DokuWiki detection based on the contents of `.txt` files. Syntax highlighting for JSON, Markdown, DokuWiki, and HTML, including embedded CSS. A dark blue editor palette in dark mode and a matching light palette in light mode.
 - Multiple documents in tabs, line numbers, cursor position, and selection size.
 - Go to line, document outline, font size controls, and line wrapping.
 - Find and replace with case sensitivity, whole-word matching, and regular expressions.
 - Explicit saving with `⌘S`, continuous local draft recovery, and optional automatic saving for files that already have a name and location.
-- Optional Markdown, DokuWiki, and HTML preview (⌥⌘P) alongside the source. Markdown supports tables, task lists, and code blocks, among other features. The preview updates after a short pause in typing; document scripts and network access are disabled. Web links open in the default browser only after confirmation, and copy buttons let you copy code.
+- Optional JSON, Markdown, DokuWiki, and HTML preview (⌥⌘P) alongside the source. Markdown supports tables, task lists, and code blocks, among other features. The preview updates after a short pause in typing; document scripts and network access are disabled. Web links open in the default browser only after confirmation, and copy buttons let you copy code.
 
-49 automated core and editor tests pass. Launch, basic editing, search, draft recovery, and an HTML document with 2,500 lines have been checked locally. Further details and outstanding checks are documented in `PROJECT_SUMMARY.md` (German).
+55 automated core and editor tests pass. Launch, basic editing, search, draft recovery, and an HTML document with 2,500 lines have been checked locally. Further details and outstanding checks are documented in `PROJECT_SUMMARY.md` (German).
 
 Draft recovery does not replace an external backup. File conflicts, recovery after crashes, and user interactions remain areas for further testing.
 
@@ -84,14 +84,18 @@ Preview, syntax highlighting, and document outlines support common basic syntax:
 On a Mac with an existing Developer ID signing identity and a configured `notarytool` keychain profile named `TextUI`:
 
 ```sh
-./script/release.sh 0.1.1
-./script/verify_release.sh 0.1.1 dist/release/0.1.1/TextUI-0.1.1-macOS-arm64.zip
+./script/release.sh 0.1.2
+./script/verify_release.sh 0.1.2 dist/release/0.1.2/TextUI-0.1.2-macOS-arm64.zip
 git push -u origin main
 # Wait for the GitHub CI run for this commit to succeed.
-./script/publish_release.sh --dry-run 0.1.1
-./script/publish_release.sh 0.1.1
+./script/publish_release.sh --dry-run 0.1.2
+./script/publish_release.sh 0.1.2
 ```
 
 `release.sh` requires a clean, committed source tree, runs all tests, creates an optimized build, signs and notarizes the app, and staples the ticket before creating the ZIP. `SIGNING_IDENTITY` and `NOTARY_PROFILE` support local overrides. Credentials remain exclusively in the keychain. An existing release output directory is never overwritten. If notarization is interrupted, first check the existing submission using its submission ID or the notarization history; do not upload it again.
 
 `verify_release.sh` extracts the supplied ZIP into a fresh directory and checks the version, bundle identifier, architecture, license files, signature, Hardened Runtime, ticket, and Gatekeeper assessment. `publish_release.sh` requires a clean `main` branch, a matching source commit, a successful GitHub CI run for that commit, a public target repository, and an unused tag. After uploading, it downloads the ZIP and checksum again, compares the GitHub digest, and verifies the downloaded app. The scripts need access to the network, keychain, and macOS security services; a restricted sandbox may block those services.
+
+## JSON
+
+JSON files support syntax highlighting and an offline preview (⌥⌘P) with readable indentation. The preview preserves key order, number precision and string escapes without changing the source. Invalid JSON shows an error with line and column; incomplete documents remain editable and saveable. Preview nesting is limited to 256 levels.

@@ -50,7 +50,7 @@ public enum TextNavigation {
         switch format {
         case .markdown: pattern = "(?m)^#{1,6}\\s+(.+)$"
         case .html: pattern = "(?is)<h[1-6]\\b[^>]*>(.*?)</h[1-6]\\s*>"
-        case .text: return []
+        case .text, .json: return []
         case .dokuwiki: return DokuWikiSyntax.outline(text)
         }
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }

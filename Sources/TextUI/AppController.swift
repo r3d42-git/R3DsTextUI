@@ -364,7 +364,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
     @objc func newDocument() { add(Draft()); window.makeKeyAndOrderFront(nil) }
     @objc func openDocument() {
         let panel = NSOpenPanel(); panel.allowsMultipleSelection = true
-        panel.allowedContentTypes = [.plainText, .html, UTType(filenameExtension: "md") ?? .plainText]
+        panel.allowedContentTypes = [.plainText, .html, .json, UTType(filenameExtension: "md") ?? .plainText]
         panel.allowsOtherFileTypes = true
         if panel.runModal() == .OK { open(panel.urls) }
     }
@@ -539,7 +539,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         previewWork?.cancel()
         let supported = current.map { $0.draft.format != .text } ?? false
         previewButton.isEnabled = supported
-        previewButton.toolTip = supported ? "Vorschau ein-/ausblenden (⌥⌘P)" : "Vorschau für Markdown, HTML und erkannte DokuWiki-Texte verfügbar"
+        previewButton.toolTip = supported ? "Vorschau ein-/ausblenden (⌥⌘P)" : "Vorschau für JSON, Markdown, HTML und erkannte DokuWiki-Texte verfügbar"
         previewHost.isHidden = !previewVisible || !supported
         previewMinimumWidth.isActive = !previewHost.isHidden
         split.layoutSubtreeIfNeeded()
@@ -566,6 +566,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         let work = DispatchWorkItem { [weak self] in
             let rendered: String
             switch format {
+            case .json: rendered = JSONPreview.html(from: text)
             case .markdown: rendered = MarkdownPreview.html(from: text)
             case .dokuwiki: rendered = DokuWikiPreview.html(from: text)
             case .html, .text: rendered = text

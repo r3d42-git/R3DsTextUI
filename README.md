@@ -3,9 +3,9 @@
 **Deutsch** · [English](README.en.md)
 
 Ein schlanker, nativer Texteditor für macOS 15 und neuer auf Apple Silicon.
-TextUI konzentriert sich auf `.txt`, `.md` und `.html`, mehrere Dateien in Tabs und zuverlässige Wiederherstellung ungespeicherter Arbeit.
+TextUI konzentriert sich auf `.txt`, `.md`, `.html` und `.json`, mehrere Dateien in Tabs und zuverlässige Wiederherstellung ungespeicherter Arbeit.
 
-**Status: frühe Version 0.1.1.** Öffentliches Projekt unter **GPL-3.0-or-later**. Sichtbarer App-Name: **TextUI**; Bundle-Name: **R3Ds TextUI**; stabile Bundle-ID: `com.r3d42.textui`.
+**Status: frühe Version 0.1.2.** Öffentliches Projekt unter **GPL-3.0-or-later**. Sichtbarer App-Name: **TextUI**; Bundle-Name: **R3Ds TextUI**; stabile Bundle-ID: `com.r3d42.textui`.
 
 [Downloads und Versionshinweise](https://github.com/r3d42-git/R3DsTextUI/releases) · [Lizenz](LICENSE) · [Lizenzumfang und Drittanbieter](LICENSING.md) · [Interaktive Architektur (English)](https://r3d42-git.github.io/R3DsTextUI/)
 
@@ -13,14 +13,14 @@ Zur Installation das Release-ZIP entpacken und `TextUI.app` in den Programme-Ord
 
 ## Umfang des Erstentwurfs
 
-- Native Texteingabe mit AppKit, automatischer Formaterkennung über die Dateiendung sowie DokuWiki-Erkennung anhand des Inhalts von `.txt`-Dateien. Syntaxhervorhebung für Markdown, DokuWiki und HTML einschließlich eingebettetem CSS. Dunkelblaue Editorpalette im dunklen Modus, angepasste helle Palette im hellen Modus.
+- Native Texteingabe mit AppKit, automatischer Formaterkennung über die Dateiendung sowie DokuWiki-Erkennung anhand des Inhalts von `.txt`-Dateien. Syntaxhervorhebung für JSON, Markdown, DokuWiki und HTML einschließlich eingebettetem CSS. Dunkelblaue Editorpalette im dunklen Modus, angepasste helle Palette im hellen Modus.
 - Mehrere Dateien in Tabs, Zeilennummern, Cursorposition und Auswahlumfang.
 - Gehe zu Zeile, Dokumentgliederung, Schriftgröße und Zeilenumbruch.
 - Suchen und Ersetzen mit Groß-/Kleinschreibung, ganzen Wörtern und regulären Ausdrücken.
 - Bewusstes Speichern mit `⌘S`, laufende lokale Entwurfssicherung und optionales automatisches Speichern bereits benannter Dateien.
-- Zuschaltbare Markdown-, DokuWiki- und HTML-Vorschau (⌥⌘P) neben dem Quelltext. Markdown unterstützt unter anderem Tabellen, Aufgabenlisten und Codeblöcke. Aktualisierung nach kurzer Schreibpause; Dokumentskripte und Netzwerkzugriff sind deaktiviert. Weblinks öffnen sich erst nach Rückfrage im Standardbrowser; Code lässt sich per Kopierknopf übernehmen.
+- Zuschaltbare JSON-, Markdown-, DokuWiki- und HTML-Vorschau (⌥⌘P) neben dem Quelltext. Markdown unterstützt unter anderem Tabellen, Aufgabenlisten und Codeblöcke. Aktualisierung nach kurzer Schreibpause; Dokumentskripte und Netzwerkzugriff sind deaktiviert. Weblinks öffnen sich erst nach Rückfrage im Standardbrowser; Code lässt sich per Kopierknopf übernehmen.
 
-49 automatisierte Core- und Editortests bestehen; Start, grundlegende Bearbeitung, Suche, Entwurfswiederherstellung und eine HTML-Datei mit 2.500 Zeilen wurden lokal geprüft. Weitere Details und offene Prüfungen stehen in `PROJECT_SUMMARY.md`.
+55 automatisierte Core- und Editortests bestehen; Start, grundlegende Bearbeitung, Suche, Entwurfswiederherstellung und eine HTML-Datei mit 2.500 Zeilen wurden lokal geprüft. Weitere Details und offene Prüfungen stehen in `PROJECT_SUMMARY.md`.
 
 Die Entwurfssicherung ersetzt keine externe Datensicherung. Insbesondere Dateikonflikte, Wiederherstellung nach Abstürzen und die Bedienung bleiben Gegenstand weiterer Tests.
 
@@ -84,14 +84,18 @@ Vorschau, Syntaxfarben und Gliederung unterstützen die gebräuchliche Grundsynt
 Auf einem Mac mit vorhandener Developer-ID-Identität und eingerichtetem `notarytool`-Schlüsselbundprofil `TextUI`:
 
 ```sh
-./script/release.sh 0.1.1
-./script/verify_release.sh 0.1.1 dist/release/0.1.1/TextUI-0.1.1-macOS-arm64.zip
+./script/release.sh 0.1.2
+./script/verify_release.sh 0.1.2 dist/release/0.1.2/TextUI-0.1.2-macOS-arm64.zip
 git push -u origin main
 # Den erfolgreichen GitHub-CI-Lauf für diesen Commit abwarten.
-./script/publish_release.sh --dry-run 0.1.1
-./script/publish_release.sh 0.1.1
+./script/publish_release.sh --dry-run 0.1.2
+./script/publish_release.sh 0.1.2
 ```
 
 `release.sh` verlangt einen sauberen, committed Quellstand, führt alle Tests aus, baut optimiert, signiert, notarisiert und heftet das Ticket vor der ZIP-Erstellung an. `SIGNING_IDENTITY` und `NOTARY_PROFILE` erlauben lokale Überschreibungen. Zugangsdaten bleiben ausschließlich im Schlüsselbund. Ein bestehendes Release-Ausgabeverzeichnis wird nicht überschrieben. Bei unterbrochener Notarisierung erst den vorhandenen Auftrag anhand der Submission-ID bzw. Notarisierungshistorie prüfen; nicht erneut hochladen.
 
 `verify_release.sh` entpackt das übergebene ZIP frisch und prüft Version, Bundle-ID, Architektur, Lizenzdateien, Signatur, Hardened Runtime, Ticket und Gatekeeper. `publish_release.sh` verlangt sauberes `main`, passenden Quellcommit, erfolgreichen GitHub-CI-Lauf dieses Commits, öffentliches Zielrepository und einen freien Tag. Nach Upload lädt es ZIP und Prüfsumme erneut herunter, gleicht auch den GitHub-Digest ab und prüft die heruntergeladene App. Die Skripte benötigen Zugriff auf Netzwerk, Schlüsselbund und macOS-Sicherheitsdienste; eine eingeschränkte Sandbox kann diese Zugriffe blockieren.
+
+## JSON
+
+JSON-Dateien unterstützen Syntaxfarben und eine Offline-Vorschau (⌥⌘P) mit lesbarer Einrückung. Schlüsselreihenfolge, Zahlengenauigkeit und String-Escapes bleiben erhalten; die Vorschau verändert den Quelltext nicht. Ungültiges JSON zeigt einen Fehler mit Zeile und Spalte; unvollständige Dokumente bleiben bearbeitbar und speicherbar. Die Vorschau ist auf 256 Verschachtelungsebenen begrenzt.

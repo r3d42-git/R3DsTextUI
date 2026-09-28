@@ -16,6 +16,7 @@ public enum SyntaxHighlighting {
     public static func spans(in text: String, format: DocumentFormat) -> [SyntaxSpan] {
         switch format {
         case .text: return []
+        case .json: return json(text)
         case .markdown: return markdown(text)
         case .dokuwiki: return DokuWikiSyntax.spans(in: text)
         case .html: return html(text)
@@ -25,6 +26,24 @@ public enum SyntaxHighlighting {
     private static func matches(_ pattern: String, in text: String, range: NSRange? = nil) -> [NSTextCheckingResult] {
         guard let expression = try? NSRegularExpression(pattern: pattern) else { return [] }
         return expression.matches(in: text, range: range ?? NSRange(location: 0, length: (text as NSString).length))
+    }
+
+    private static func json(_ text: String) -> [SyntaxSpan] {
+        // A single lexical pass keeps keywords and punctuation inside strings literal.
+        let pattern = #""(?:\\.|[^"\\])*(?:"|\z)|-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?|\b(?:true|false|null)\b|[{}\[\]:,]"#
+        let source = text as NSString
+        return matches(pattern, in: text).map { match in
+            let token = source.substring(with: match.range)
+            let kind: SyntaxKind
+            if token.hasPrefix("\"") {
+                var next = NSMaxRange(match.range)
+                while next < source.length, [9, 10, 13, 32].contains(source.character(at: next)) { next += 1 }
+                kind = next < source.length && source.character(at: next) == 58 ? .attribute : .string
+            } else if token == "true" || token == "false" || token == "null" { kind = .keyword }
+            else if token.first == "-" || token.first?.isNumber == true { kind = .number }
+            else { kind = .punctuation }
+            return SyntaxSpan(range: match.range, kind: kind)
+        }
     }
 
     private static func markdown(_ text: String) -> [SyntaxSpan] {
