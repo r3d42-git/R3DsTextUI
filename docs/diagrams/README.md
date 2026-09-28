@@ -8,12 +8,14 @@ editor, controller, preview, persistence and local integration boundaries.
 
 ## Source evidence
 
-Source snapshot: `73adb159cf5579e12d25bb16bd4c21d1ea8dd4b3`.
-All ten component references were verified against that commit and origin.
+Source snapshot: `4a90c64e67d5fc52b7861e375b01907dca56f409`.
+All twelve source references across ten components were verified against that commit and origin.
 The JSON source is `architecture.json`; the published artifact is `../index.html`.
 The arrows describe selected outbound operations, not every callback or return.
 “Database” is Archify's storage category; TextUI uses files and JSON, not a database server.
-Preview rendering includes Markdown and DokuWiki conversion plus HTML pass-through.
+Preview rendering includes Markdown and DokuWiki conversion, HTML pass-through,
+and JSON validation/indentation. JSON formatting preserves key order, number
+precision and string escapes; errors include line/column. The source stays unchanged.
 The confirmed-link path is coordinated by AppDelegate. The clipboard path uses
 PreviewCodeCopy in an isolated WebKit content world.
 
@@ -30,7 +32,7 @@ runtime acceptance tests.
 - Light/dark captures: both endpoint sizes; no horizontal or vertical overflow.
 - Perceptual review: passed after inspection of the 1440×900 light and
   2048×1320 dark screenshots; clear routes, readable labels and balanced layout.
-- Geometry correction rounds: 1 (two downward relationship labels).
+- Geometry correction rounds for this update: 0 (existing layout preserved).
 - Viewer interaction and export workflows were not separately exercised.
 
 `delivery.json` records exact specification and artifact SHA-256 digests.

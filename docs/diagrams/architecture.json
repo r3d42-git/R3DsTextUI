@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "TextUI \u00b7 Local-first architecture",
+    "title": "TextUI · Local-first architecture",
     "locale": "en",
     "quality_profile": "showcase",
     "viewBox": [
@@ -11,7 +11,7 @@
     ],
     "repository": {
       "url": "https://github.com/r3d42-git/R3DsTextUI",
-      "revision": "73adb159cf5579e12d25bb16bd4c21d1ea8dd4b3",
+      "revision": "4a90c64e67d5fc52b7861e375b01907dca56f409",
       "provider": "github",
       "link_mode": "web"
     }
@@ -21,7 +21,7 @@
       "id": "editor",
       "type": "frontend",
       "label": "Native editor",
-      "sublabel": "AppKit \u00b7 NSTextView",
+      "sublabel": "AppKit · NSTextView",
       "pos": [
         35,
         275
@@ -41,7 +41,7 @@
       "id": "controller",
       "type": "backend",
       "label": "App controller",
-      "sublabel": "Tabs \u00b7 commands \u00b7 drafts",
+      "sublabel": "Tabs · commands · drafts",
       "pos": [
         355,
         275
@@ -61,7 +61,7 @@
       "id": "renderers",
       "type": "backend",
       "label": "Preview renderers",
-      "sublabel": "Markdown \u00b7 DokuWiki \u00b7 HTML",
+      "sublabel": "Markdown · Wiki · HTML · JSON",
       "pos": [
         675,
         275
@@ -73,7 +73,11 @@
       "sources": [
         {
           "path": "Sources/TextUI/AppController.swift",
-          "line": 567
+          "line": 568
+        },
+        {
+          "path": "Sources/TextUICore/JSONPreview.swift",
+          "line": 5
         }
       ]
     },
@@ -81,7 +85,7 @@
       "id": "webview",
       "type": "frontend",
       "label": "Offline preview",
-      "sublabel": "WKWebView \u00b7 restricted CSP",
+      "sublabel": "WKWebView · restricted CSP",
       "pos": [
         995,
         275
@@ -93,7 +97,7 @@
       "sources": [
         {
           "path": "Sources/TextUI/AppController.swift",
-          "line": 573
+          "line": 574
         }
       ]
     },
@@ -101,7 +105,7 @@
       "id": "syntax",
       "type": "backend",
       "label": "Syntax engine",
-      "sublabel": "Async tokens \u00b7 version check",
+      "sublabel": "Async tokens · version check",
       "pos": [
         35,
         65
@@ -114,6 +118,10 @@
         {
           "path": "Sources/TextUI/EditorPane.swift",
           "line": 174
+        },
+        {
+          "path": "Sources/TextUICore/SyntaxHighlighting.swift",
+          "line": 31
         }
       ]
     },
@@ -133,7 +141,7 @@
       "sources": [
         {
           "path": "Sources/TextUICore/Documents.swift",
-          "line": 100
+          "line": 101
         }
       ]
     },
@@ -141,7 +149,7 @@
       "id": "files",
       "type": "database",
       "label": "Document files",
-      "sublabel": "Encoding \u00b7 conflict check",
+      "sublabel": "Encoding · conflict check",
       "pos": [
         355,
         505
@@ -153,7 +161,7 @@
       "sources": [
         {
           "path": "Sources/TextUICore/Documents.swift",
-          "line": 86
+          "line": 87
         }
       ]
     },
@@ -161,7 +169,7 @@
       "id": "search",
       "type": "backend",
       "label": "Search & outline",
-      "sublabel": "TextUICore \u00b7 UTF-16 ranges",
+      "sublabel": "TextUICore · UTF-16 ranges",
       "pos": [
         675,
         505
@@ -193,7 +201,7 @@
       "sources": [
         {
           "path": "Sources/TextUI/AppController.swift",
-          "line": 597
+          "line": 598
         }
       ]
     },
@@ -273,7 +281,7 @@
       "title": "Native, local-first",
       "items": [
         "SwiftPM: TextUI + TextUICore",
-        "macOS 15+ \u00b7 Apple Silicon"
+        "macOS 15+ · Apple Silicon"
       ]
     },
     {
@@ -289,7 +297,8 @@
       "title": "Preview boundary",
       "items": [
         "Document scripts and network blocked",
-        "Only confirmed web links leave the app"
+        "Only confirmed web links leave the app",
+        "JSON validates without changing source"
       ]
     }
   ]
