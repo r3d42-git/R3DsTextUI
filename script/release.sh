@@ -6,7 +6,8 @@ VERSION="${1:-}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Usage: $0 VERSION" >&2; exit 64; }
 [[ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)" == "$VERSION" ]]
 [[ -z "$(git status --porcelain)" ]] || { echo 'Commit all source changes before release.' >&2; exit 1; }
-IDENTITY="${SIGNING_IDENTITY:-Developer ID Application: Philipp John Hild (G6JH37W285)}"
+# Fingerprint selects the G2 certificate even when Developer ID names match.
+IDENTITY="${SIGNING_IDENTITY:-D548540E7FE1BD9B3C4518CC02D8786E1BFEB885}"
 PROFILE="${NOTARY_PROFILE:-TextUI}"
 IDENTITIES="$(security find-identity -v -p codesigning)"
 [[ "$IDENTITIES" == *"$IDENTITY"* ]] || { echo 'Developer ID identity unavailable.' >&2; exit 1; }

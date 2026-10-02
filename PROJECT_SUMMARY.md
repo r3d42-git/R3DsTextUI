@@ -202,3 +202,9 @@ Nutzerabnahme am 2026-09-28: „funktioniert“. Anschließend vollständige Ver
 - Architektur-Spezifikation SHA-256: `15bccc5f2242fc273815a0ef83b88e4e98f3a8e7724a241536c16941f9e1d4af`; HTML SHA-256: `e6c8f01259f81502c1e6a453ebb778b375235230d92d42e34ac032801434ded1`. Archify: 9/9 Showcase, 0 Fehler/Warnungen, Browsernachweise bestanden bei 1440×900, 1600×1000, 1920×1080 und 2048×1320; helle/dunkle Screenshots visuell geprüft. Keine Geometriekorrekturen in dieser Aktualisierung. Receipts unter `docs/diagrams/delivery.json` und `docs/index.visual-check.json`.
 - Grenzen: kein Start auf sauberem fremden Mac, kein vollständiger manueller macOS-15-Abnahmetest, kein Rechnerneustart. `/Applications/TextUI.app` wurde nicht ersetzt. Bestehende Nutzersitzung und ältere Releases bleiben erhalten.
 - Dieser Nachweis wird als separater Dokumentationscommit mit `[skip ci]` nachgeführt; der veröffentlichte Tag bleibt unverändert.
+
+## Vorbereitung: 0.1.3 / Build 4 (noch nicht veröffentlicht)
+
+- `Resources/Info.plist` trägt Version 0.1.3 und Build 4. App-Funktionen bleiben gegenüber 0.1.2 unverändert.
+- Der lokale Releasepfad verwendet die gültige G2-Developer-ID standardmäßig über SHA-1 `D548540E7FE1BD9B3C4518CC02D8786E1BFEB885`; `SIGNING_IDENTITY` bleibt als Override erhalten. Die vorhandene Identitätsprüfung läuft vor Tests, Build und Notarisierung.
+- `release-notes/v0.1.3.md` ist vorbereitet. Build, Notarisierung, Tag, GitHub-Release und Downloadprüfung stehen noch aus; 0.1.2 bleibt bis dahin der veröffentlichte Stand.
