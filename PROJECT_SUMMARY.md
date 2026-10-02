@@ -1,6 +1,6 @@
 # TextUI – Projektstand und Übergabe
 
-Stand: 2026-09-28. JSON-Unterstützung vom Nutzer bestätigt; TextUI 0.1.2 (Build 3) öffentlich veröffentlicht und anhand eines frischen Downloads verifiziert. Beschreibung, deutsche/englische README und Archify-Seite sind aktualisiert. Die älteren Abschnitte dokumentieren den historischen Entwicklungsstand.
+Stand: 2026-10-02. TextUI 0.1.3 (Build 4) ist mit G2 signiert, notarisiert, öffentlich veröffentlicht und am frischen GitHub-Download verifiziert. Ältere Abschnitte dokumentieren den historischen Entwicklungsstand.
 
 ## Vereinbarter Produktumfang
 
@@ -31,7 +31,7 @@ Swift Package mit AppKit-Executable `TextUI`, einer `TextUICore`-Bibliothek und 
 
 Der Nutzer hat am 2026-09-27 das öffentliche Repository `r3d42-git/R3DsTextUI`, Commit und Push aller Projektänderungen sowie die signierte und notarisierte Distribution autorisiert. Lizenz: GPL-3.0-or-later; Drittanbieterhinweise bleiben erhalten. Keine Nutzerdateien, echten Entwürfe, Tokens oder privaten Schlüssel einchecken.
 
-Releaseprofil: SwiftPM, `main`, Version 0.1.2 (Build 3), Apple Silicon arm64, macOS 15+, Bundle-ID `com.r3d42.textui`. Lokale Developer-ID-Signierung mit Hardened Runtime, Schlüsselbundprofil `TextUI`. `script/release.sh` erzeugt das ZIP erst nach angenommener Notarisierung und Stapling der App. `verify_release.sh` prüft die frisch entpackte App; `publish_release.sh` prüft Quellcommit, freien Tag, öffentliches Repository und den späteren GitHub-Download samt Digest. CI baut und testet ohne Signiergeheimnisse.
+Releaseprofil: SwiftPM, `main`, Version 0.1.3 (Build 4), Apple Silicon arm64, macOS 15+, Bundle-ID `com.r3d42.textui`. Lokale Developer-ID-Signierung mit Hardened Runtime, Schlüsselbundprofil `TextUI`. `script/release.sh` erzeugt das ZIP erst nach angenommener Notarisierung und Stapling der App. `verify_release.sh` prüft die frisch entpackte App; `publish_release.sh` prüft Quellcommit, freien Tag, öffentliches Repository und den späteren GitHub-Download samt Digest. CI baut und testet ohne Signiergeheimnisse.
 
 ## Validierung am 2026-09-27
 
@@ -203,8 +203,11 @@ Nutzerabnahme am 2026-09-28: „funktioniert“. Anschließend vollständige Ver
 - Grenzen: kein Start auf sauberem fremden Mac, kein vollständiger manueller macOS-15-Abnahmetest, kein Rechnerneustart. `/Applications/TextUI.app` wurde nicht ersetzt. Bestehende Nutzersitzung und ältere Releases bleiben erhalten.
 - Dieser Nachweis wird als separater Dokumentationscommit mit `[skip ci]` nachgeführt; der veröffentlichte Tag bleibt unverändert.
 
-## Vorbereitung: 0.1.3 / Build 4 (noch nicht veröffentlicht)
+## Abgeschlossener G2-Release 0.1.3 — 2026-10-02
 
-- `Resources/Info.plist` trägt Version 0.1.3 und Build 4. App-Funktionen bleiben gegenüber 0.1.2 unverändert.
-- Der lokale Releasepfad verwendet die gültige G2-Developer-ID standardmäßig über SHA-1 `D548540E7FE1BD9B3C4518CC02D8786E1BFEB885`; `SIGNING_IDENTITY` bleibt als Override erhalten. Die vorhandene Identitätsprüfung läuft vor Tests, Build und Notarisierung.
-- `release-notes/v0.1.3.md` ist vorbereitet. Build, Notarisierung, Tag, GitHub-Release und Downloadprüfung stehen noch aus; 0.1.2 bleibt bis dahin der veröffentlichte Stand.
+- Release [0.1.3](https://github.com/r3d42-git/R3DsTextUI/releases/tag/v0.1.3) ist öffentlich veröffentlicht. Annotierter Tag `v0.1.3` bleibt auf Quellcommit `ba93ed638e1a6077cee0a8257f68f6ebe1f9b52d`; diese Abschlussbelege folgen separat. App-Funktionen bleiben gegenüber dem Vorgänger unverändert.
+- 55 Swift-Tests erfolgreich; exakte Quellcommit-CI [Run 36973363470](https://github.com/r3d42-git/R3DsTextUI/actions/runs/36973363470) erfolgreich.
+- Apple-Submission(s) `bcd9843e-f344-4200-9be7-59b880a4ef50`: Accepted; App-Ticket angeheftet. Bei DMGs wurden App und Container getrennt notarisiert und gestapelt.
+- Native lokale und frische GitHub-Downloadprüfung: strikte Signatur, Hardened Runtime, sicherer Zeitstempel, Architektur/Bundle-Metadaten, Lizenzmaterial, Stapling und Gatekeeper erfolgreich. Zusätzliche öffentliche Leaf-Prüfung bestätigt exakt G2 SHA-1 `D548540E7FE1BD9B3C4518CC02D8786E1BFEB885`.
+- Asset `TextUI-0.1.3-macOS-arm64.zip`; SHA-256 `f507a40394b6e409c0e1e2a96ffb7f001a41363182efe634b391687bf880d9c3` stimmt lokal, mit Download und veröffentlichter Prüfsumme überein. Build `4`, Bundle-ID `com.r3d42.textui`.
+- Keine neue manuelle UI-Abnahme aus diesen Distributionsprüfungen abgeleitet. Bestehende Laufzeit-/UI-Nachweise gelten weiterhin nur für ihren dokumentierten Umfang.
