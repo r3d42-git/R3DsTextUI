@@ -1,6 +1,6 @@
 # TextUI – Projektstand und Übergabe
 
-Stand: 2026-10-05. TextUI 0.2.0 (Build 5) ist für den vom Nutzer beauftragten vollständigen Release vorbereitet. Implementierung und native Bedienprüfung abgeschlossen, 72 Tests bestanden. Signierung, Notarisierung, CI und Veröffentlichung werden im Releaseablauf erneut geprüft; der letzte bestätigte öffentliche Release ist 0.1.3. Ältere Abschnitte dokumentieren den historischen Entwicklungsstand.
+Stand: 2026-10-05. TextUI 0.2.0 (Build 5) ist öffentlich veröffentlicht. 72 Tests und die CI des exakten Releasecommits bestanden. Developer-ID-Signatur, Apple-Notarisierung, angeheftetes App-Ticket, Gatekeeper und Prüfsumme auch am frisch heruntergeladenen GitHub-ZIP bestätigt. Ältere Abschnitte dokumentieren den historischen Entwicklungsstand; die aktuellen Release-Nachweise stehen am Ende.
 
 ## Vereinbarter Produktumfang
 
@@ -287,3 +287,20 @@ Erneuter arm64-Bundlebuild, Ad-hoc-Signatur und Start erfolgreich. Native Abschl
 ## Releaseauftrag 0.2.0
 
 Am 2026-10-05 vollständigen Commit-/Push-/Releaseablauf vom Nutzer freigegeben. Umfang: Minimap samt Schnellschalter, schaltbare Zeilen-/Spaltenleisten und Cursormarker, persistente App-Darstellung, hellere Flächen, Karteikarten-Tabs und korrigierter Appearance-/TextKit-Größenpfad. Version 0.2.0, Build 5; bestehende Architektur-/README-Dokumentation und Versionshinweise werden aktualisiert. Keine Änderungen an Abhängigkeiten, Benutzerdateien oder installierten Apps. Distribution weiterhin signiertes und notarisiertes arm64-ZIP, Tag v0.2.0 auf finalem geprüften Releasecommit.
+
+
+## Verifizierter öffentlicher Release 0.2.0 – 2026-10-05
+
+- App-Release veröffentlicht und verifiziert: Implementierung `2e7cc7a606609fd835383942fde0fe701bcafe74`, Releasecommit `933de07fcde13f96cbda8ed38dc9e53952a1a265`. Annotierter Tag `v0.2.0` bleibt unverändert auf dem Releasecommit; diese nachträglichen Nachweise werden separat als Dokumentation eingecheckt.
+- Öffentlicher Release, kein Draft/Prerelease: https://github.com/r3d42-git/R3DsTextUI/releases/tag/v0.2.0
+- Asset: https://github.com/r3d42-git/R3DsTextUI/releases/download/v0.2.0/TextUI-0.2.0-macOS-arm64.zip ; SHA-256-Datei daneben.
+- ZIP SHA-256: `24256fee9369a0d49e64cd6cb2173378254a7fd9419781411b616aa541dd1a26`. Lokale Datei, unabhängiger GitHub-Download, veröffentlichte Prüfsummendatei und GitHub-Asset-Digest stimmen überein.
+- Frisch extrahiertes öffentliches Bundle: Version 0.2.0, Build 5, ausschließlich arm64, macOS 15+, Bundle-ID `com.r3d42.textui`; GPL-3.0-or-later und Drittanbieterhinweise enthalten.
+- Signatur: Developer ID Application: Philipp John Hild (G6JH37W285), Hardened Runtime und sicherer Zeitstempel. G2-Leaf-SHA-1 aus dem heruntergeladenen Bundle bestätigt: `D548540E7FE1BD9B3C4518CC02D8786E1BFEB885`.
+- Apple-Submission `9fbb92a0-0089-44b3-8b0c-89c46530db3e`: Accepted. App vor dem finalen ZIP gestapelt. Lokales und öffentlich heruntergeladenes ZIP frisch entpackt; Archivintegrität, strikte Codesign-Prüfung, angeheftetes Ticket (`stapler validate`) und Gatekeeper (`accepted`, `Notarized Developer ID`) erfolgreich.
+- Repository-native Kette `release.sh`, `publish_release.sh --dry-run` und `publish_release.sh` erfolgreich. Vollsuite erneut 72 Tests (47 Core, 25 native); CI für den exakten Releasecommit erfolgreich: https://github.com/r3d42-git/R3DsTextUI/actions/runs/37363305649 ; zusätzliche Tag-CI ebenfalls erfolgreich: https://github.com/r3d42-git/R3DsTextUI/actions/runs/37363701307
+- README deutsch/englisch, zweisprachige Versionshinweise und englische Archify-Seite aktualisiert. Architektur mit zehn Komponenten und 16 Quellverweisen auf den Implementierungscommit; 9/9 Showcase-Prüfungen, vier Viewports von 1440 × 900 bis 2048 × 1320 ohne Warnungen/Fehler geprüft. Keine Nutzerdateien in der Dokumentation.
+- Archify-Quellspec SHA-256: `5c10604c8fd994a4eef522e900b5d34c6a2f7a7205e051485dee51b55feb3ddf`; HTML SHA-256: `703a10463ed3be120e52a3754da39520fc7b006d5d4fa6981b465ac011c0c224`.
+- GitHub-Pages-Bereitstellung des Releasecommits: https://github.com/r3d42-git/R3DsTextUI/actions/runs/37363304676 — beim Abschlusscheck weiterhin in GitHubs Warteschlange ohne zugewiesenen Runner. GitHub meldet seit 19:11 UTC eine Actions-Störung mit verzögerter Runner-Zuweisung: https://stspg.io/c11dc9nb1zdq . Die öffentliche Seite liefert noch den vorherigen HTML-Stand (SHA-256 `e6c8f01259f81502c1e6a453ebb778b375235230d92d42e34ac032801434ded1`). Die neue Seite ist im Repository vollständig vorbereitet und geprüft; der öffentliche HTML-Abgleich bleibt nach erfolgreichem Deployment offen. Der App-Release ist davon unabhängig verfügbar.
+- Zusätzlicher Zertifikatsexport lieferte in der eingeschränkten Umgebung trotz Codesign-Erfolg keine Dateien; identischer lesender Export im freigegebenen lokalen Kontext erfolgreich. Keine Änderung an Signatur, Schlüsselbund, Abhängigkeiten oder Toolchain erforderlich.
+- Grenze: Kein Start des öffentlichen Downloads auf einem separaten sauberen Mac getestet. Bestehende Nutzerdateien und Sitzung erhalten; laufender Entwicklungsbuild und installierte Apps nicht durch das Releasepaket ersetzt.
