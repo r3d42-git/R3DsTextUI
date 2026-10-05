@@ -28,11 +28,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
     var refresh: DispatchWorkItem?
     var fontSize: CGFloat = 14
     var wrap = true
+    var minimapVisible = true
+    var columnRulerVisible = true
+    var lineNumbersVisible = true
     var autosave = false
+    var appearanceMode = AppearanceMode.system
+    var appearanceDefaults = UserDefaults.standard
     let tabStrip = NSStackView()
     let editorHost = NSView()
     let status = NSTextField(labelWithString: "")
     let sizeLabel = NSTextField(labelWithString: "14 pt")
+    let minimapButton = NSButton()
     let outline = NSPopUpButton()
     let searchRow = NSStackView()
     let query = NSSearchField()
@@ -60,7 +66,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
     func applicationDidFinishLaunching(_ notification: Notification) {
         fontSize = CGFloat(UserDefaults.standard.object(forKey: "fontSize") as? Double ?? 14)
         wrap = UserDefaults.standard.object(forKey: "wrap") as? Bool ?? true
+        minimapVisible = UserDefaults.standard.object(forKey: "minimapVisible") as? Bool ?? true
+        columnRulerVisible = UserDefaults.standard.object(forKey: "columnRulerVisible") as? Bool ?? true
+        lineNumbersVisible = UserDefaults.standard.object(forKey: "lineNumbersVisible") as? Bool ?? true
         autosave = UserDefaults.standard.bool(forKey: "autosave")
+        appearanceMode = AppearanceMode(savedValue: UserDefaults.standard.string(forKey: "appearanceMode"))
+        NSApp.appearance = appearanceMode.appearance
         buildMenus()
         buildWindow()
         do {
@@ -131,8 +142,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         item(edit, "Nächster Treffer", #selector(nextMatch), "g")
         item(edit, "Vorheriger Treffer", #selector(previousMatch), "g", [.command, .shift])
         let view = menu("Darstellung")
+        let appearanceItem = NSMenuItem(title: "Erscheinungsbild", action: nil, keyEquivalent: "")
+        let appearanceMenu = NSMenu(title: "Erscheinungsbild")
+        for mode in AppearanceMode.allCases {
+            let entry = NSMenuItem(title: mode.title, action: #selector(changeAppearance(_:)), keyEquivalent: "")
+            entry.representedObject = mode.rawValue
+            entry.target = self
+            entry.state = mode == appearanceMode ? .on : .off
+            appearanceMenu.addItem(entry)
+        }
+        appearanceItem.submenu = appearanceMenu
+        view.addItem(appearanceItem)
+        view.addItem(.separator())
         item(view, "Schriftgröße …", #selector(showSettings))
         item(view, "Zeilenumbruch", #selector(toggleWrap))
+        item(view, "Spaltenleiste", #selector(toggleColumnRuler))
+        item(view, "Zeilennummern", #selector(toggleLineNumbers))
+        item(view, "Minimap", #selector(toggleMinimap))
         item(view, "Vorschau", #selector(togglePreview), "p", [.command, .option])
         let navigation = menu("Navigation")
         item(navigation, "Gehe zu Zeile …", #selector(goToLine), "l")
@@ -155,15 +181,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         return button
     }
 
-    func buildWindow() {
+    func buildWindow(restoreFrame: Bool = true) {
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1120, height: 760), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = "TextUI"
+        window.titlebarAppearsTransparent = true
+        window.backgroundColor = EditorTheme.windowChrome
         window.minSize = NSSize(width: 840, height: 450)
         window.delegate = self
         window.isReleasedWhenClosed = false
         window.center()
-        window.setFrameAutosaveName("TextUI.Main")
-        let root = NSStackView()
+        if restoreFrame { window.setFrameAutosaveName("TextUI.Main") }
+        let root = ChromeStackView()
+        root.onAppearanceChange = { [weak self] in self?.refreshTheme() }
         root.orientation = .vertical; root.spacing = 0; root.alignment = .leading
         window.contentView = root
         let toolbar = NSStackView(views: [button("Neu", #selector(newDocument), symbol: "plus"), button("Öffnen", #selector(openDocument), symbol: "folder"), button("Speichern", #selector(saveDocument), symbol: "square.and.arrow.down")])
@@ -227,6 +256,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         bottom.addArrangedSubview(status)
         let filler = NSView(); filler.setContentHuggingPriority(.defaultLow, for: .horizontal); bottom.addArrangedSubview(filler)
         bottom.addArrangedSubview(button("Umbruch", #selector(toggleWrap)))
+        minimapButton.title = "Minimap"
+        minimapButton.target = self
+        minimapButton.action = #selector(toggleMinimap)
+        minimapButton.bezelStyle = .rounded
+        minimapButton.setButtonType(.pushOnPushOff)
+        updateMinimapButton()
+        bottom.addArrangedSubview(minimapButton)
         bottom.addArrangedSubview(button("Schrift …", #selector(showSettings)))
         bottom.addArrangedSubview(sizeLabel)
         root.addArrangedSubview(bottom)
@@ -280,11 +316,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         selectedID = tabs.contains(where: { $0.draft.id == id }) ? id : tabs.first?.draft.id
         editorHost.subviews.forEach { $0.removeFromSuperview() }
         guard let tab = current else { return }
+        tab.editor.setMinimapVisible(minimapVisible)
+        tab.editor.setColumnRulerVisible(columnRulerVisible)
+        tab.editor.setLineNumbersVisible(lineNumbersVisible)
         pin(tab.editor.view, in: editorHost)
         updatePreview()
         window.contentView?.layoutSubtreeIfNeeded()
         tab.editor.updateAppearance(format: tab.draft.format, fontSize: fontSize, wrap: wrap)
         tab.editor.finishLayout()
+        tab.editor.refreshColors()
         tab.editor.textView.setSelectedRange(NSRange(location: min(tab.draft.selection, (tab.editor.textView.string as NSString).length), length: 0))
         window.makeFirstResponder(tab.editor.textView)
         tab.editor.scrollView.contentView.scroll(to: NSPoint(x: 0, y: tab.draft.scrollY))
@@ -312,7 +352,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
             selectButton.font = .systemFont(ofSize: 12, weight: tab.draft.id == selectedID ? .semibold : .regular)
             let close = NSButton(image: NSImage(systemSymbolName: "xmark", accessibilityDescription: "Tab schließen")!, target: self, action: #selector(tabCloseClicked(_:)))
             close.tag = index; close.isBordered = false; close.toolTip = "Tab schließen"
-            let group = NSStackView(views: [selectButton, close]); group.spacing = 8
+            let group = DocumentTabView(views: [selectButton, close]); group.spacing = 8
+            group.isSelected = tab.draft.id == selectedID
+            group.heightAnchor.constraint(equalToConstant: 35).isActive = true
             group.edgeInsets = NSEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
             tabStrip.addArrangedSubview(group)
         }
@@ -471,7 +513,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         fontSize = selectedSize
         updateAppearance()
     }
+    @objc func toggleMinimap() {
+        minimapVisible.toggle()
+        UserDefaults.standard.set(minimapVisible, forKey: "minimapVisible")
+        for tab in tabs { tab.editor.setMinimapVisible(minimapVisible) }
+        updateMinimapButton()
+    }
+    @objc func toggleColumnRuler() {
+        columnRulerVisible.toggle()
+        UserDefaults.standard.set(columnRulerVisible, forKey: "columnRulerVisible")
+        for tab in tabs { tab.editor.setColumnRulerVisible(columnRulerVisible) }
+    }
+    @objc func toggleLineNumbers() {
+        lineNumbersVisible.toggle()
+        UserDefaults.standard.set(lineNumbersVisible, forKey: "lineNumbersVisible")
+        for tab in tabs { tab.editor.setLineNumbersVisible(lineNumbersVisible) }
+    }
+    private func updateMinimapButton() {
+        minimapButton.state = minimapVisible ? .on : .off
+        minimapButton.toolTip = minimapVisible ? "Minimap ausblenden" : "Minimap einblenden"
+    }
     @objc func toggleWrap() { wrap.toggle(); updateAppearance() }
+    @objc func changeAppearance(_ sender: NSMenuItem) {
+        guard let rawValue = sender.representedObject as? String,
+              let mode = AppearanceMode(rawValue: rawValue) else { return }
+        appearanceMode = mode
+        appearanceDefaults.set(mode.rawValue, forKey: "appearanceMode")
+        NSApp.appearance = mode.appearance
+        refreshTheme()
+    }
+
+    func refreshTheme() {
+        guard let window else { return }
+        // Resolve window chrome again when System follows an OS appearance change.
+        window.effectiveAppearance.performAsCurrentDrawingAppearance {
+            window.backgroundColor = EditorTheme.windowChrome.usingColorSpace(.deviceRGB) ?? EditorTheme.windowChrome
+        }
+        window.contentView?.needsDisplay = true
+        // AppKit propagates NSApp.appearance through the window, including WebKit.
+        // Never mutate appearance during an effective-appearance notification:
+        // NSTextView can reenter resize/layout while AppKit is invalidating it.
+        // Detached editors refresh when selected, after receiving valid geometry.
+        current?.editor.refreshColors()
+    }
     func updateAppearance() {
         UserDefaults.standard.set(Double(fontSize), forKey: "fontSize"); UserDefaults.standard.set(wrap, forKey: "wrap")
         if let tab = current { tab.editor.updateAppearance(format: tab.draft.format, fontSize: fontSize, wrap: wrap) }
@@ -617,7 +701,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
 
 extension AppDelegate: NSMenuItemValidation {
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(changeAppearance(_:)) {
+            menuItem.state = (menuItem.representedObject as? String) == appearanceMode.rawValue ? .on : .off
+        }
+        if menuItem.action == #selector(toggleColumnRuler) { menuItem.state = columnRulerVisible ? .on : .off }
+        if menuItem.action == #selector(toggleLineNumbers) { menuItem.state = lineNumbersVisible ? .on : .off }
         if menuItem.action == #selector(toggleAutosave) { menuItem.state = autosave ? .on : .off }
+        if menuItem.action == #selector(toggleMinimap) { menuItem.state = minimapVisible ? .on : .off }
         if menuItem.action == #selector(toggleWrap) { menuItem.state = wrap ? .on : .off }
         if menuItem.action == #selector(togglePreview) { menuItem.state = previewVisible ? .on : .off; return current.map { $0.draft.format != .text } ?? false }
         return true

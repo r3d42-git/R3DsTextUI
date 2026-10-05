@@ -2,7 +2,7 @@ import AppKit
 import TextUICore
 
 /// The editor owns native text layout; the controller owns the file and session.
-final class EditorPane: NSObject, NSTextViewDelegate {
+final class EditorPane: NSObject, NSTextViewDelegate, NSLayoutManagerDelegate {
     let scrollView: NSScrollView
     let view = NSView()
     let textView: NSTextView
@@ -11,10 +11,17 @@ final class EditorPane: NSObject, NSTextViewDelegate {
     private var format: DocumentFormat
     private var highlightWork: DispatchWorkItem?
     private var highlightGeneration = 0
-    private var gutter: LineNumberRuler!
+    private(set) var gutter: LineNumberRuler!
+    let columnRuler: ColumnRuler
+    private var columnRulerHeight: NSLayoutConstraint!
     private var appliedFontSize: CGFloat?
     private var appliedWrap: Bool?
     private var requestedWrap = true
+    private var updatingDocumentFrame = false
+    let minimap = EditorMinimap(frame: .zero)
+    private var minimapWidth: NSLayoutConstraint!
+    private var minimapSpans: [SyntaxSpan] = []
+    private var minimapVisible = true
 
     init(text: String, format: DocumentFormat, fontSize: CGFloat) {
         self.format = format
@@ -31,6 +38,7 @@ final class EditorPane: NSObject, NSTextViewDelegate {
         let native = SourceTextView(frame: NSRect(x: 0, y: 0, width: 600, height: 400), textContainer: container)
         native.preferredNewline = TextFile(text: text).newline
         textView = native
+        columnRuler = ColumnRuler(textView: native, scrollView: scrollView)
         super.init()
         native.isRichText = false
         native.importsGraphics = false
@@ -50,6 +58,10 @@ final class EditorPane: NSObject, NSTextViewDelegate {
         native.minSize = NSSize(width: 0, height: 0)
         native.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         native.isVerticallyResizable = true
+        // TextKit owns the document frame. Implicit autoresizing constraints can
+        // otherwise reset its height during scroll tiling and repeat layout.
+        native.translatesAutoresizingMaskIntoConstraints = false
+
         native.backgroundColor = EditorTheme.background
         native.textColor = EditorTheme.foreground
         native.insertionPointColor = EditorTheme.currentNumber
@@ -64,27 +76,144 @@ final class EditorPane: NSObject, NSTextViewDelegate {
         view.clipsToBounds = true
         view.addSubview(gutter)
         view.addSubview(scrollView)
+        view.addSubview(minimap)
+        view.addSubview(columnRuler)
+        columnRuler.translatesAutoresizingMaskIntoConstraints = false
+        columnRulerHeight = columnRuler.heightAnchor.constraint(equalToConstant: 26)
+        columnRulerHeight.isActive = true
+        minimap.translatesAutoresizingMaskIntoConstraints = false
+        minimapWidth = minimap.widthAnchor.constraint(equalToConstant: 136)
+        minimapWidth.isActive = true
+        minimap.onNavigate = { [weak self] location in
+            guard let self else { return }
+            let horizontalOrigin = self.scrollView.contentView.bounds.minX
+            self.textView.scrollRangeToVisible(NSRange(location: location, length: 0))
+            if let layout = self.textView.layoutManager {
+                let length = (self.textView.string as NSString).length
+                let rect: NSRect
+                if location < length {
+                    let glyph = layout.glyphIndexForCharacter(at: location)
+                    rect = layout.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil, withoutAdditionalLayout: true)
+                } else { rect = layout.extraLineFragmentRect }
+                if rect.height > 0 {
+                    if let container = self.textView.textContainer { self.updateDocumentFrame(in: container) }
+                    let clip = self.scrollView.contentView
+                    var proposed = clip.bounds
+                    proposed.origin = NSPoint(x: horizontalOrigin, y: location == 0 ? 0 : max(0, rect.minY + self.textView.textContainerOrigin.y))
+                    clip.scroll(to: clip.constrainBoundsRect(proposed).origin)
+                }
+            }
+            self.scrollView.reflectScrolledClipView(self.scrollView.contentView)
+            self.updateMinimapViewport()
+        }
         gutter.translatesAutoresizingMaskIntoConstraints = false
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             gutter.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            gutter.topAnchor.constraint(equalTo: view.topAnchor),
+            gutter.topAnchor.constraint(equalTo: columnRuler.bottomAnchor),
             gutter.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             scrollView.leadingAnchor.constraint(equalTo: gutter.trailingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            scrollView.trailingAnchor.constraint(equalTo: minimap.leadingAnchor),
+            minimap.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            minimap.topAnchor.constraint(equalTo: columnRuler.bottomAnchor),
+            minimap.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            scrollView.topAnchor.constraint(equalTo: columnRuler.bottomAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            columnRuler.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            columnRuler.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            columnRuler.topAnchor.constraint(equalTo: view.topAnchor)
         ])
         native.delegate = self
+        layout.delegate = self
         scrollView.contentView.postsFrameChangedNotifications = true
         NotificationCenter.default.addObserver(self, selector: #selector(viewportSizeChanged), name: NSView.frameDidChangeNotification, object: scrollView.contentView)
+        NotificationCenter.default.addObserver(self, selector: #selector(viewportScrolled), name: NSView.boundsDidChangeNotification, object: scrollView.contentView)
+        minimap.update(text: text, spans: [])
         updateAppearance(format: format, fontSize: fontSize, wrap: true)
         scheduleHighlight()
     }
 
     deinit { NotificationCenter.default.removeObserver(self) }
 
-    @objc private func viewportSizeChanged() { synchronizeWrapWidth() }
+    func layoutManager(_ layoutManager: NSLayoutManager, didCompleteLayoutFor textContainer: NSTextContainer?, atEnd layoutFinishedFlag: Bool) {
+        guard let textContainer else { return }
+        updateDocumentFrame(in: textContainer, layoutFinished: layoutFinishedFlag)
+    }
+
+    private func updateDocumentFrame(in textContainer: NSTextContainer, layoutFinished: Bool = false) {
+        guard !updatingDocumentFrame, let layoutManager = textView.layoutManager else { return }
+        // usedRect reads completed layout; it does not force the entire file to
+        // be typeset. Extend the scrollable document as visible/target lines lay out.
+        let used = layoutManager.usedRect(for: textContainer)
+        let extra = layoutManager.extraLineFragmentRect
+        let viewport = scrollView.contentSize
+        let inset = textView.textContainerInset
+        let width = requestedWrap ? max(viewport.width, textView.frame.width)
+            : max(viewport.width, used.maxX + 2 * inset.width)
+        let laidOutHeight = max(used.maxY, extra.maxY) + 2 * inset.height
+        let height = max(viewport.height, layoutFinished ? laidOutHeight : max(textView.frame.height, laidOutHeight))
+        let size = NSSize(width: width, height: height)
+        guard abs(textView.frame.width - width) > 0.5 || abs(textView.frame.height - height) > 0.5 else { return }
+        updatingDocumentFrame = true
+        textView.setFrameSize(size)
+        updatingDocumentFrame = false
+    }
+
+    /// Palette changes reuse the dynamic syntax attributes and minimap tokens.
+    /// No storage editing, syntax scan, layout changes or selection notifications.
+    func refreshColors() {
+        textView.needsDisplay = true
+        scrollView.needsDisplay = true
+        gutter.needsDisplay = true
+        columnRuler.needsDisplay = true
+        minimap.refreshColors()
+    }
+
+    @objc private func viewportSizeChanged() { synchronizeWrapWidth(); updateMinimapColumns(); updateMinimapViewport(); columnRuler.needsDisplay = true }
+    @objc private func viewportScrolled() { updateMinimapViewport(); columnRuler.needsDisplay = true }
+
+    func setColumnRulerVisible(_ visible: Bool) {
+        guard columnRuler.isHidden == visible else { return }
+        columnRuler.isHidden = !visible
+        columnRulerHeight.constant = visible ? 26 : 0
+        finishRulerVisibilityChange()
+    }
+
+    func setLineNumbersVisible(_ visible: Bool) {
+        guard gutter.isHidden == visible else { return }
+        gutter.setVisible(visible)
+        finishRulerVisibilityChange()
+    }
+
+    private func finishRulerVisibilityChange() {
+        view.layoutSubtreeIfNeeded()
+        synchronizeWrapWidth()
+        updateMinimapColumns()
+        updateMinimapViewport()
+        gutter.needsDisplay = true
+        columnRuler.needsDisplay = true
+    }
+
+    func setMinimapVisible(_ visible: Bool) {
+        guard minimapVisible != visible else { return }
+        minimapVisible = visible
+        minimap.isHidden = !visible
+        minimapWidth.constant = visible ? 136 : 0
+        view.layoutSubtreeIfNeeded()
+        synchronizeWrapWidth()
+        updateMinimapColumns()
+        if visible { minimap.update(text: textView.string, spans: minimapSpans); updateMinimapViewport() }
+    }
+
+    private func updateMinimapColumns() { minimap.resizeOverview() }
+
+    private func updateMinimapViewport() {
+        guard minimapVisible, let layout = textView.layoutManager, let container = textView.textContainer else { return }
+        // Query only the currently visible glyph region; never request the full container.
+        let glyphs = layout.glyphRange(forBoundingRect: textView.visibleRect.offsetBy(dx: -textView.textContainerOrigin.x, dy: -textView.textContainerOrigin.y), in: container)
+        let characters = layout.characterRange(forGlyphRange: glyphs, actualGlyphRange: nil)
+        minimap.updateViewport(characters)
+    }
 
     /// Autoresizing during attachment can preserve a provisional document width.
     /// The viewport, not that provisional frame, defines the wrapping boundary.
@@ -144,6 +273,9 @@ final class EditorPane: NSObject, NSTextViewDelegate {
         if formatChanged { scheduleHighlight() }
         synchronizeWrapWidth()
         gutter.needsDisplay = true
+        columnRuler.needsDisplay = true
+        updateMinimapColumns()
+        updateMinimapViewport()
     }
 
     /// Call after the host has its final size, before restoring a saved viewport.
@@ -152,6 +284,7 @@ final class EditorPane: NSObject, NSTextViewDelegate {
         synchronizeWrapWidth()
         if let container = textView.textContainer {
             textView.layoutManager?.ensureLayout(forBoundingRect: textView.visibleRect, in: container)
+            updateDocumentFrame(in: container)
         }
         // Preserve horizontal scrolling; normalize only the vertical origin
         // left over from initial offscreen text layout.
@@ -161,12 +294,17 @@ final class EditorPane: NSObject, NSTextViewDelegate {
 
     func textDidChange(_ notification: Notification) {
         gutter.rebuildLines()
+        columnRuler.needsDisplay = true
+        minimapSpans = []
+        minimap.invalidate()
+        if minimapVisible { minimap.update(text: textView.string, spans: []) }
         scheduleHighlight()
         onChange?()
     }
 
     func textViewDidChangeSelection(_ notification: Notification) {
         gutter.needsDisplay = true
+        columnRuler.needsDisplay = true
         textView.needsDisplay = true
         onSelection?()
     }
@@ -192,6 +330,8 @@ final class EditorPane: NSObject, NSTextViewDelegate {
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.highlightGeneration == generation,
                       let layout = self.textView.layoutManager else { return }
+                self.minimapSpans = spans
+                if self.minimapVisible { self.minimap.update(text: text, spans: spans); self.updateMinimapViewport() }
                 for span in spans {
                     let color: NSColor
                     switch span.kind {
@@ -247,9 +387,9 @@ private final class SourceTextView: NSTextView {
     }
 }
 
-private final class LineNumberRuler: NSView {
+final class LineNumberRuler: NSView {
     private var widthConstraint: NSLayoutConstraint!
-    private var ruleThickness: CGFloat = 48 { didSet { widthConstraint?.constant = ruleThickness } }
+    private var ruleThickness: CGFloat = 48 { didSet { widthConstraint?.constant = isHidden ? 0 : ruleThickness } }
     override var isFlipped: Bool { true }
     private weak var editor: NSTextView?
     private var starts = [0]
@@ -267,6 +407,12 @@ private final class LineNumberRuler: NSView {
     required init(coder: NSCoder) { fatalError("Use init(scrollView:textView:)") }
     deinit { NotificationCenter.default.removeObserver(self) }
     @objc private func scrolled() { needsDisplay = true }
+
+    func setVisible(_ visible: Bool) {
+        isHidden = !visible
+        widthConstraint.constant = visible ? ruleThickness : 0
+        needsDisplay = true
+    }
 
     func rebuildLines() {
         guard let editor else { return }

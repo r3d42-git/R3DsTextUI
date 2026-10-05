@@ -17,7 +17,7 @@ public enum MarkdownPreview {
         <meta name="color-scheme" content="light dark">
         <style>
         :root { color-scheme: light dark; --background:#ffffff; --foreground:#263448; --muted:#65758b; --line:#dbe2eb; --code:#f1f4f8; --accent:#1767ab; }
-        @media(prefers-color-scheme:dark) { :root { --background:#1d293b; --foreground:#d2dbea; --muted:#a0aec0; --line:#3d4d63; --code:#172131; --accent:#70c7f1; } }
+        @media(prefers-color-scheme:dark) { :root { --background:#273449; --foreground:#d2dbea; --muted:#a0aec0; --line:#4a5c73; --code:#222e40; --accent:#70c7f1; } }
         * { box-sizing:border-box; }
         body { margin:0; background:var(--background); color:var(--foreground); font:16px/1.65 -apple-system,BlinkMacSystemFont,sans-serif; overflow-wrap:anywhere; }
         main { max-width:900px; margin:auto; padding:28px clamp(18px,5vw,48px) 64px; }

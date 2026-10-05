@@ -1,6 +1,6 @@
 # TextUI – Projektstand und Übergabe
 
-Stand: 2026-10-02. TextUI 0.1.3 (Build 4) ist mit G2 signiert, notarisiert, öffentlich veröffentlicht und am frischen GitHub-Download verifiziert. Ältere Abschnitte dokumentieren den historischen Entwicklungsstand.
+Stand: 2026-10-05. TextUI 0.2.0 (Build 5) ist für den vom Nutzer beauftragten vollständigen Release vorbereitet. Implementierung und native Bedienprüfung abgeschlossen, 72 Tests bestanden. Signierung, Notarisierung, CI und Veröffentlichung werden im Releaseablauf erneut geprüft; der letzte bestätigte öffentliche Release ist 0.1.3. Ältere Abschnitte dokumentieren den historischen Entwicklungsstand.
 
 ## Vereinbarter Produktumfang
 
@@ -31,7 +31,7 @@ Swift Package mit AppKit-Executable `TextUI`, einer `TextUICore`-Bibliothek und 
 
 Der Nutzer hat am 2026-09-27 das öffentliche Repository `r3d42-git/R3DsTextUI`, Commit und Push aller Projektänderungen sowie die signierte und notarisierte Distribution autorisiert. Lizenz: GPL-3.0-or-later; Drittanbieterhinweise bleiben erhalten. Keine Nutzerdateien, echten Entwürfe, Tokens oder privaten Schlüssel einchecken.
 
-Releaseprofil: SwiftPM, `main`, Version 0.1.3 (Build 4), Apple Silicon arm64, macOS 15+, Bundle-ID `com.r3d42.textui`. Lokale Developer-ID-Signierung mit Hardened Runtime, Schlüsselbundprofil `TextUI`. `script/release.sh` erzeugt das ZIP erst nach angenommener Notarisierung und Stapling der App. `verify_release.sh` prüft die frisch entpackte App; `publish_release.sh` prüft Quellcommit, freien Tag, öffentliches Repository und den späteren GitHub-Download samt Digest. CI baut und testet ohne Signiergeheimnisse.
+Releaseprofil: SwiftPM, `main`, Version 0.2.0 (Build 5), Apple Silicon arm64, macOS 15+, Bundle-ID `com.r3d42.textui`. Lokale Developer-ID-Signierung mit Hardened Runtime, Schlüsselbundprofil `TextUI`. `script/release.sh` erzeugt das ZIP erst nach angenommener Notarisierung und Stapling der App. `verify_release.sh` prüft die frisch entpackte App; `publish_release.sh` prüft Quellcommit, freien Tag, öffentliches Repository und den späteren GitHub-Download samt Digest. CI baut und testet ohne Signiergeheimnisse.
 
 ## Validierung am 2026-09-27
 
@@ -211,3 +211,79 @@ Nutzerabnahme am 2026-09-28: „funktioniert“. Anschließend vollständige Ver
 - Native lokale und frische GitHub-Downloadprüfung: strikte Signatur, Hardened Runtime, sicherer Zeitstempel, Architektur/Bundle-Metadaten, Lizenzmaterial, Stapling und Gatekeeper erfolgreich. Zusätzliche öffentliche Leaf-Prüfung bestätigt exakt G2 SHA-1 `D548540E7FE1BD9B3C4518CC02D8786E1BFEB885`.
 - Asset `TextUI-0.1.3-macOS-arm64.zip`; SHA-256 `f507a40394b6e409c0e1e2a96ffb7f001a41363182efe634b391687bf880d9c3` stimmt lokal, mit Download und veröffentlichter Prüfsumme überein. Build `4`, Bundle-ID `com.r3d42.textui`.
 - Keine neue manuelle UI-Abnahme aus diesen Distributionsprüfungen abgeleitet. Bestehende Laufzeit-/UI-Nachweise gelten weiterhin nur für ihren dokumentierten Umfang.
+
+
+## Code-Minimap – lokale Entwicklung am 2026-10-05
+
+Auf Nutzerwunsch ist rechts im Editor eine 136 pt breite Code-Minimap ergänzt, direkt neben dem Quelltext auch bei geöffneter Vorschau. Die Übersicht zeigt Syntaxfarben und den sichtbaren Ausschnitt. Klicken springt, Ziehen bewegt den Ausschnitt, das Mausrad über der Minimap navigiert weiter durch die Datei; Textauswahl und Cursor bleiben erhalten. Darstellung → Minimap schaltet sie ein/aus, standardmäßig eingeschaltet; `minimapVisible` wird in UserDefaults gespeichert.
+
+Der Nutzer hat die erste, auf die Fensterhöhe verdichtete Variante als zu kompakt zurückgewiesen. Die fertige Variante verwendet daher einen mitlaufenden Ausschnitt mit festem Maßstab: drei Punkte pro physischer Quellzeile, davon eine Farbzeile und zwei Punkte Abstand. Einrückungen, vierstellige Tabstopps, Leerzeilen und Codeblöcke bleiben sichtbar; kurze Dokumente stehen kompakt oben. Während des Ziehens bleibt der Übersichtsausschnitt stabil.
+
+`EditorMinimap.swift` erzeugt im Hintergrund einen Zeilenindex und rendert nur die tatsächlich sichtbaren Übersichtszeilen (maximal 96 × 512 Farbwerte; Bild mit Zeilenabstand). Syntax-Tokens werden wiederverwendet, veraltete Ergebnisse verworfen und Bilder zwischengespeichert. Kein zusätzliches vollständiges TextKit-Layout für das Zeichnen der Minimap. Sprünge zielen auf physische Zeilenanfänge, erhalten die horizontale Scrollposition und berücksichtigen den Textcontainerversatz.
+
+Grenzen: Die Minimap ist eine Strukturansicht der physischen Zeilen, keine lesbare zweite Textansicht. Lange Einzelzeilen werden rechts abgeschnitten, weiche Umbrüche nicht vervielfältigt. Native Sprünge in extrem lange Einzelzeilen können weiterhin TextKit-Arbeit auslösen. Keine Behauptung einer vollständigen Performance-Abnahme aller großen BR-Suite-Dateien.
+
+Validierung: Vollständige Swift-Suite mit 61 Tests bestanden, darunter sechs Minimap-Tests für UTF-16/CRLF, begrenzte Darstellung einer 11-MB-Einzelzeile, Geometrie/Ein-Aus, Navigation mit unverändertem Text/Auswahl/horizontaler Position, Ausschnittsmarkierung und Zeilenausrichtung, kompakte kurze Dokumente sowie mitlaufende Übersicht ohne Stauchung. Lokaler arm64-Bundlebuild mit Ad-hoc-Signatur und Start erfolgreich. Native Bedienprüfung der fertigen Variante mit synthetischem HTML (1.316 Zeilen): sichtbare CSS-/HTML-Blöcke und Leerzeilen, Klick, Ziehen, Mausrad bis in den hinteren Dokumentbereich und Vorschau daneben erfolgreich; Cursorposition bleibt unverändert. Testdaten ausschließlich unter ignoriertem `.local/qa/minimap/`; bestehende Nutzertabs bleiben erhalten. Das synthetische Strukturtestdokument ist zur Ansicht geöffnet. Kein Commit, Push oder Release dieser Änderung.
+
+### Minimap-Schnellschalter
+
+In der unteren Statusleiste steht zwischen „Umbruch“ und „Schrift …“ jetzt ein nativer Minimap-Umschalter. Sein Ein-/Aus-Zustand und Tooltip folgen derselben Einstellung wie Darstellung → Minimap, auch wenn das Menü verwendet wird. Lokaler Bundlebuild und Start erfolgreich; Ausblenden per Schalter, erneutes Einblenden per Menü und synchroner Schalterzustand in der laufenden App geprüft. Keine neue Vollsuite für diese kleine Bedienergänzung; die 61 Tests oben beziehen sich auf die Minimap-Implementierung vor dem zusätzlichen Schalter.
+
+
+## Spaltenleiste und schaltbare Zeilennummern – 2026-10-05
+
+Eine 26 pt hohe native Spaltenleiste sitzt oberhalb des Quelltextes. Die Skala beginnt bei 1, beschriftet normalerweise jede zehnte Spalte und ergänzt kleine Teilstriche. Die Positionen berücksichtigen Textcontainerursprung, Zeilenpadding, aktuelle Menlo-Zeichenbreite und horizontales Scrollen. Über Nummernspalte und Minimap bleibt die Leiste leer. Sie zählt visuelle Schriftzellen: Tabulatoren nehmen ihre sichtbare Breite ein, weiche Umbrüche beginnen links erneut; die logische Cursorposition bleibt in der Statusleiste.
+
+Darstellung → Spaltenleiste und Darstellung → Zeilennummern schalten die Leisten unabhängig; keine zusätzlichen unteren Schaltflächen. Beide zunächst an, gespeichert als `columnRulerVisible` und `lineNumbersVisible` in UserDefaults. Ausblenden gibt die jeweilige Höhe/Breite frei. Versteckte Zeilennummern behalten null Breite auch nach Font-/Zeilenzahländerungen. Die Spaltenleiste zeichnet ausschließlich die sichtbare Breite ohne zusätzliches Dokumentlayout.
+
+Validierung: Vollsuite mit 64 Tests erfolgreich (47 Core, 17 native). Drei neue RulerTests vergleichen echte TextKit-Glyphpositionen bei Scrollen, Resize, verschiedenen Insets/Padding und 10/14/28 pt; prüfen unabhängige Geometrie, Umbruch, unveränderte Auswahl/Text sowie die versteckte Nummernspalte bei 10.000 Zeilen. Minimap-Test verwendet jetzt die tatsächliche verfügbare Höhe statt einer festen Fensterhöhe. Lokaler arm64-Bundlebuild/Start erfolgreich. Native Sichtprüfung bei 20 pt mit synthetischen Ziffernzeilen: Ausrichtung, horizontales Scrollen, unabhängiges Ausblenden und Beibehaltung beider ausgeblendeter Einstellungen nach regulärem App-Neustart bestätigt. Zur Übergabe beide Leisten wieder an und ursprünglicher Zeilenumbruch wiederhergestellt. Temporärer Spaltentest geschlossen, synthetischer HTML-Strukturtest weiterhin offen. Keine Veröffentlichung.
+
+
+### Cursormarker in der Spaltenleiste
+
+Ein cyanfarbenes Dreieck (8 × 6 pt) zeigt die native Einfügeposition am unteren Rand der Spaltenleiste. Die Geometrie stammt aus AppKits Cursorrechteck und berücksichtigt Tabulatoren, Unicode, weichen Umbruch, Schriftgröße und horizontales Scrollen. Eine vorgelagerte Prüfung des sichtbaren Zeichenbereichs verhindert Cursorlayout für entfernte Absätze beim Minimap-Scrollen. Bei nichtleerer/mehrfacher Auswahl sowie einem außerhalb des sichtbaren Textbereichs liegenden Cursor wird der Marker ausgeblendet. Auswahl- und Textänderungen zeichnen die Leiste erneut.
+
+Sechs gezielte RulerTests bestanden (drei zusätzliche Tests für Cursorpositionen, leeres Dokument/Zeilenenden und Auswahl/Offscreen). Letzte Vollsuite vor dieser Ergänzung: 64 Tests; für den begrenzten Marker wurde sie nicht erneut ausgeführt. Bundlebuild und Start erfolgreich. Native Sichtprüfung im synthetischen Strukturtest: Marker an Zeile 216/Spalte 32 und nach drei Linksbewegungen an Spalte 29 bestätigt; ursprüngliche Position 216/32 wiederhergestellt. Dokumentinhalt unverändert.
+
+
+### Dunkle Palette behutsam aufgehellt
+
+Auf Nutzerwunsch dunklen Editorhintergrund von `#1D293B` auf `#273449` und Minimap-Hintergrund von `#172131` auf `#222E40` angehoben. Grundtext, Kommentare, Zeilennummern sowie aktuelle Zeile und Auswahl passend aufgehellt; Syntax-Akzentfarben und helle Palette unverändert. Die zentrale Markdown-Vorschaudarstellung verwendet die gleichen aufgehellten Hintergrund-/Codeflächen. Lokaler Bundlebuild/Start und native Sichtprüfung am synthetischen HTML-Strukturtest erfolgreich. Rechnerischer Kontrast auf dem Editorgrund: Grundtext 7,18:1, Kommentare 4,55:1, Zeilennummern 3,36:1. Reine Farbwertänderung, keine neuen Tests oder erneute Vollsuite; Vorschau-Farben nicht separat visuell abgenommen.
+
+
+### Hellere Fensterleisten und Erscheinungsbild-Menü
+
+Titel-, Werkzeug-, Tab- und Fußbereich verwenden nun eine gemeinsame dynamische Fläche: dunkel `#364154`, hell `#EEF1F6`. Die native Titelleiste bleibt erhalten und übernimmt über `titlebarAppearsTransparent` die Fensterfarbe. `ChromeStackView` zeichnet die dynamische Farbe ohne eingefrorenen Layer-Farbwert.
+
+Unter Darstellung → Erscheinungsbild stehen Hell, Dunkel und System mit exklusivem Menü-Häkchen zur Verfügung. `appearanceMode` wird in UserDefaults gespeichert; fehlende oder unbekannte Werte bedeuten System. Hell/Dunkel setzen ausschließlich die AppKit-Darstellung von TextUI, System entfernt den Override. Änderungen aktualisieren alle Editortabs, Syntaxfarben, Leisten und das gecachte Minimap-Bild. WebKit passt `prefers-color-scheme` nativ an; kein erneutes Laden der Vorschau und keine erneute Syntaxanalyse allein wegen des Farbwechsels.
+
+Validierung: 69 Tests bestanden (47 Core, 22 native), darunter zwei neue AppearanceTests für Präferenzwerte, Untermenü/Targets/Häkchen sowie Farbwechsel bei erhaltenem Text, Auswahl, Scrollposition und temporären Syntaxattributen. Ein zunächst blockierender Testfenster-Aufbau wurde durch einen begrenzten Editorhost ohne Fensterzeichnung ersetzt; diese automatisierten Tests belegen deshalb keine Fensterdarstellung. Lokaler arm64-Bundlebuild mit Ad-hoc-Signatur und Start erfolgreich. Native Sichtprüfung mit synthetischem Markdown: hellere dunkle Kopf-/Fußflächen, Hell/Dunkel/System, Syntax-/Minimap-/Vorschaufarben und unveränderte Vorschauposition beim Umschalten bestätigt. Helle Einstellung nach regulärem Neustart beibehalten. System-Override geprüft; ein tatsächlicher macOS-Systemwechsel wurde nicht ausgelöst.
+
+Zur Übergabe wieder System eingestellt, temporären Markdown-Testtab geschlossen und zum bisherigen HTML-Strukturtest zurückgekehrt (Cursor weiterhin 216:32). Bestehende Nutzertabs erhalten. README deutsch/englisch aktualisiert. Kein Commit, Push oder Release.
+
+
+### Tabs als dezente Karteikarten
+
+Auf Nutzerwunsch zeichnet `DocumentTabView` hinter den bestehenden nativen Tab-Schaltflächen einzelne Karten mit gerader Unterkante, gerundeten oberen Ecken, feinem Rand, sanftem Farbverlauf und kleinem Schatten. Aktiver Tab zwei Punkte höher und heller mit stärkerem Rand; die Farben folgen Hell/Dunkel/System. Vorhandene Tababstände und Gesamthöhe der Tabzeile bleiben erhalten. Keine Animationen oder neuen Abhängigkeiten.
+
+Lokaler arm64-Bundlebuild, Ad-hoc-Signatur und Start erfolgreich. Native Sichtprüfung in Hell und Dunkel bestätigt klar getrennte Karten und aktive Hervorhebung. Neuen leeren Testtab geöffnet, zurück zum synthetischen Strukturtest gewechselt und den inaktiven Testtab über sein Kreuz geschlossen. Danach Systemdarstellung wiederhergestellt; bestehende Nutzertabs erhalten. Reine visuelle Ergänzung: keine zusätzlichen automatisierten Tests und keine Wiederholung der zuvor erfolgreichen 69er-Suite. `git diff --check` sauber. Kein Commit, Push oder Release.
+
+Nachjustierung auf Nutzerwunsch: obere Tab-Ecken mit 10 statt 6 pt Radius und kreisförmiger Bézier-Rundung. Erneuter Bundlebuild/Start und native Sichtprüfung erfolgreich.
+
+
+### Hänger beim Wechsel Dunkel → Hell korrigiert – 2026-10-05
+
+Der Nutzer meldete einen Ausfall beim Farbwechsel mit fünf normalen Notizen und dem synthetischen Strukturtest. Der bereitgestellte macOS-Bericht erfasst einen Hang von 27,43 Sekunden. Die Hauptthread-Kette führt von `changeAppearance` über die noch laufende AppKit-Appearance-Invalidierung und `ChromeStackView` erneut zu `refreshTheme`/`NSView.setAppearance`, anschließend in TextKit-Layout, TextView-Größenänderung und ScrollView-Tiling. Tab-Kartenzeichnung ist nicht Teil dieser Kette.
+
+Korrektur: Editoren und WebKit erben die App-Darstellung, statt während des Farbwechsels weitere Einzel-Overrides zu erhalten. Der Chrome-Callback wird auf dem nächsten Main-Loop-Durchlauf gebündelt ausgeführt. Nur der aktive Editor erhält eine explizite Farbneuzeichnung; inaktive Editoren beim Auswählen nach gültigem Layout. Keine erneute Syntaxanalyse oder Vorschau-Neuladung wegen eines Farbwechsels.
+
+Zusätzlich wurde die TextKit-/Auto-Layout-Schleife an einem kleinen nativen Testfenster reproduziert: implizite Autoresizing-Constraints setzten die von TextKit vergrößerte Dokumenthöhe zurück. Die TextView erzeugt diese Constraints nun nicht mehr. Ein gegen Wiedereintritt geschützter Größenabgleich übernimmt Höhe/Breite aus bereits berechnetem TextKit-Layout, einschließlich letzter Leerzeile und Insets. Er läuft nach Layoutabschluss und bei vorhandenen Layout-/Navigationsabschlussstellen, erhält die Scrollfläche und erlaubt nach vollständigem Layout auch Schrumpfen. Keine zusätzliche Vollayout-Anforderung für die Größenberechnung. Die erste Variante ohne Größenabgleich fiel in Navigationstests durch und wurde vor Abschluss ersetzt.
+
+Validierung: Vollständige Suite mit **72 Tests bestanden** (47 Core, 25 native). Drei zusätzliche Tests für echten App-Fenster-/Menüpfad mit zehn Farbwechseln, asynchron gebündelten Callback und wachsende/schrumpfende Dokumentfläche samt Umbruch-/Horizontalgeometrie. Der bestehende Syntax-/Farbtest verwendet jetzt ein echtes Fenster und App-Vererbung statt isolierter View-Overrides. Die Tests isolieren Präferenzen, Fensterrestaurierung und SessionStore von Nutzerdaten. Der ursprünglich gemeldete 27-Sekunden-Menü-Hang ließ sich im automatisierten Menütest nicht direkt reproduzieren; die verwandte native Größen-/Tiling-Schleife wurde vor der Korrektur beobachtet und besteht danach nicht mehr im Test.
+
+Erneuter arm64-Bundlebuild, Ad-hoc-Signatur und Start erfolgreich. Native Abschlussprüfung mit den sechs vorhandenen Tabs: zehn weitere Hell/Dunkel-Wechsel ohne Hänger, Cursor 216:32 und AX-Scrollwert während aller Wechsel exakt unverändert. Separates synthetisches Navigationsdokument über Minimap bis zum Dateiende (Zeile 1316) und zurück, Cursor unverändert; schmaler Editor durch Vorschau und anschließende Rückkehr geprüft. Temporären Tab geschlossen; bestehende Sitzung mit sichtbarem Bereich ab Zeile 259 wiederhergestellt. Nutzerwahl **Hell** beibehalten. `git diff --check` sauber. Kein Commit, Push oder Release.
+
+
+## Releaseauftrag 0.2.0
+
+Am 2026-10-05 vollständigen Commit-/Push-/Releaseablauf vom Nutzer freigegeben. Umfang: Minimap samt Schnellschalter, schaltbare Zeilen-/Spaltenleisten und Cursormarker, persistente App-Darstellung, hellere Flächen, Karteikarten-Tabs und korrigierter Appearance-/TextKit-Größenpfad. Version 0.2.0, Build 5; bestehende Architektur-/README-Dokumentation und Versionshinweise werden aktualisiert. Keine Änderungen an Abhängigkeiten, Benutzerdateien oder installierten Apps. Distribution weiterhin signiertes und notarisiertes arm64-ZIP, Tag v0.2.0 auf finalem geprüften Releasecommit.

@@ -5,6 +5,45 @@ import TextUICore
 
 final class EditorPaneTests: XCTestCase {
     @MainActor
+    func testNativeDocumentFrameGrowsForScrollAndShrinksAfterDeletion() throws {
+        _ = NSApplication.shared
+        let source = String(repeating: String(repeating: "Wort ", count: 100) + "\n", count: 80)
+        let pane = EditorPane(text: source, format: .text, fontSize: 14)
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 500),
+                              styleMask: [.titled, .resizable], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.contentView = pane.view
+        defer { window.close() }
+        let container = try XCTUnwrap(pane.textView.textContainer)
+        let layout = try XCTUnwrap(pane.textView.layoutManager)
+        for wrap in [true, false, true] {
+            pane.updateAppearance(format: .text, fontSize: 14, wrap: wrap)
+            pane.view.layoutSubtreeIfNeeded()
+            pane.finishLayout()
+            // This intentionally small document validates completed layout size.
+            layout.ensureLayout(for: container)
+            pane.finishLayout()
+            XCTAssertGreaterThan(pane.textView.frame.height, pane.scrollView.contentSize.height)
+            if wrap {
+                XCTAssertEqual(pane.textView.frame.width, pane.scrollView.contentSize.width, accuracy: 1)
+            } else {
+                XCTAssertGreaterThan(pane.textView.frame.width, pane.scrollView.contentSize.width)
+            }
+            let clip = pane.scrollView.contentView
+            clip.scroll(to: NSPoint(x: 0, y: 600))
+            pane.scrollView.reflectScrolledClipView(clip)
+            XCTAssertGreaterThan(clip.bounds.minY, 0)
+        }
+        pane.textView.string = "Kurzer Text."
+        pane.textDidChange(Notification(name: NSText.didChangeNotification, object: pane.textView))
+        layout.ensureLayout(for: container)
+        pane.finishLayout()
+        XCTAssertEqual(pane.textView.frame.height, pane.scrollView.contentSize.height, accuracy: 1)
+        XCTAssertEqual(pane.scrollView.contentView.bounds.minY, 0, accuracy: 1)
+        XCTAssertEqual(pane.textView.string, "Kurzer Text.")
+    }
+
+    @MainActor
     func testOpeningAndResizingDocumentAppliesWrapWithoutToggling() async throws {
         _ = NSApplication.shared
         let source = String(repeating: "Langer Absatz mit mehreren Worten. ", count: 80)
