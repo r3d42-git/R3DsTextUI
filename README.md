@@ -5,24 +5,40 @@
 Ein schlanker, nativer Texteditor für macOS 15 und neuer auf Apple Silicon.
 TextUI konzentriert sich auf `.txt`, `.md`, `.html` und `.json`, mehrere Dateien in Tabs und zuverlässige Wiederherstellung ungespeicherter Arbeit.
 
-**Status: frühe Version 0.1.2.** Öffentliches Projekt unter **GPL-3.0-or-later**. Sichtbarer App-Name: **TextUI**; Bundle-Name: **R3Ds TextUI**; stabile Bundle-ID: `com.r3d42.textui`.
+**Status: frühe Version 0.2.0.** Öffentliches Projekt unter **GPL-3.0-or-later**. Sichtbarer App-Name: **TextUI**; Bundle-Name: **R3Ds TextUI**; stabile Bundle-ID: `com.r3d42.textui`.
 
 [Downloads und Versionshinweise](https://github.com/r3d42-git/R3DsTextUI/releases) · [Lizenz](LICENSE) · [Lizenzumfang und Drittanbieter](LICENSING.md) · [Interaktive Architektur (English)](https://r3d42-git.github.io/R3DsTextUI/)
 
 Zur Installation das Release-ZIP entpacken und `TextUI.app` in den Programme-Ordner ziehen. Unterstützt werden ausschließlich Apple-Silicon-Macs ab macOS 15. Öffentliche Release-Pakete werden mit Developer ID und Hardened Runtime signiert, bei Apple notarisiert und enthalten die App mit angeheftetem Notarisierungsticket.
 
-## Umfang des Erstentwurfs
+## Funktionen
 
 - Native Texteingabe mit AppKit, automatischer Formaterkennung über die Dateiendung sowie DokuWiki-Erkennung anhand des Inhalts von `.txt`-Dateien. Syntaxhervorhebung für JSON, Markdown, DokuWiki und HTML einschließlich eingebettetem CSS. Dunkelblaue Editorpalette im dunklen Modus, angepasste helle Palette im hellen Modus.
-- Mehrere Dateien in Tabs, Zeilennummern, Cursorposition und Auswahlumfang.
+- Mehrere Dateien in abgerundeten Tabs, unabhängig schaltbare Zeilen- und Spaltenleisten, Cursorposition und Auswahlumfang.
 - Gehe zu Zeile, Dokumentgliederung, Schriftgröße und Zeilenumbruch.
 - Suchen und Ersetzen mit Groß-/Kleinschreibung, ganzen Wörtern und regulären Ausdrücken.
 - Bewusstes Speichern mit `⌘S`, laufende lokale Entwurfssicherung und optionales automatisches Speichern bereits benannter Dateien.
 - Zuschaltbare JSON-, Markdown-, DokuWiki- und HTML-Vorschau (⌥⌘P) neben dem Quelltext. Markdown unterstützt unter anderem Tabellen, Aufgabenlisten und Codeblöcke. Aktualisierung nach kurzer Schreibpause; Dokumentskripte und Netzwerkzugriff sind deaktiviert. Weblinks öffnen sich erst nach Rückfrage im Standardbrowser; Code lässt sich per Kopierknopf übernehmen.
 
-55 automatisierte Core- und Editortests bestehen; Start, grundlegende Bearbeitung, Suche, Entwurfswiederherstellung und eine HTML-Datei mit 2.500 Zeilen wurden lokal geprüft. Weitere Details und offene Prüfungen stehen in `PROJECT_SUMMARY.md`.
+72 automatisierte Core- und Editortests bestehen; Start, grundlegende Bearbeitung, Suche, Entwurfswiederherstellung und eine HTML-Datei mit 2.500 Zeilen wurden lokal geprüft. Weitere Details und offene Prüfungen stehen in `PROJECT_SUMMARY.md`.
 
 Die Entwurfssicherung ersetzt keine externe Datensicherung. Insbesondere Dateikonflikte, Wiederherstellung nach Abstürzen und die Bedienung bleiben Gegenstand weiterer Tests.
+
+## Minimap
+
+Die Minimap am rechten Editorrand zeigt die Dokumentstruktur als verkleinerte, farbige Übersicht. Bei langen Dateien läuft der Ausschnitt mit, damit Einrückungen, Leerzeilen und Codeblöcke erkennbar bleiben. Der sichtbare Ausschnitt ist hervorgehoben. Ein Klick springt zur entsprechenden Stelle; Ziehen verschiebt den Ausschnitt. Bei eingeblendeter Vorschau bleibt die Minimap direkt neben dem Quelltext.
+
+Über den **Minimap**-Schalter unten neben „Umbruch“ und „Schrift …“ oder **Darstellung → Minimap** lässt sich die Übersicht ein- und ausblenden. Der Schalter zeigt den aktuellen Zustand an. Die Einstellung bleibt über App-Neustarts erhalten. Mit dem Mausrad über der Minimap lässt sich durch das Dokument navigieren. Die Übersicht dient der Orientierung und ist keine lesbare zweite Textansicht.
+
+## Erscheinungsbild
+
+Unter **Darstellung → Erscheinungsbild** stehen **Hell**, **Dunkel** und **System** zur Wahl. Die Auswahl gilt für TextUI und bleibt nach einem Neustart erhalten. **System** folgt der macOS-Darstellung. Titelbereich, Werkzeug- und Fußleiste verwenden abgestimmte Flächen; die dunkle Variante ist etwas heller als zuvor. Die Tabs haben deutlich abgerundete obere Ecken.
+
+## Zeilen- und Spaltenleisten
+
+Über **Darstellung → Zeilennummern** und **Darstellung → Spaltenleiste** lassen sich die beiden Leisten unabhängig ein- und ausblenden. Beide sind zunächst sichtbar; die Einstellungen bleiben nach einem Neustart erhalten.
+
+Die Spaltenleiste oberhalb des Textes zeigt eine visuelle Zeichenskala, passt sich der Schriftgröße an und folgt horizontalem Scrollen. Tabulatoren belegen ihre sichtbare Breite; bei weichem Zeilenumbruch beginnt die Skala links erneut. Ein kleines Dreieck markiert die sichtbare Einfügeposition in der Spaltenleiste. Bei einer Textauswahl oder einem Cursor außerhalb des sichtbaren Textbereichs wird es ausgeblendet. Die logische Cursorposition bleibt unten in der Statusleiste sichtbar.
 
 ## Speichern und Schließen
 
@@ -84,12 +100,12 @@ Vorschau, Syntaxfarben und Gliederung unterstützen die gebräuchliche Grundsynt
 Auf einem Mac mit vorhandener Developer-ID-Identität und eingerichtetem `notarytool`-Schlüsselbundprofil `TextUI`:
 
 ```sh
-./script/release.sh 0.1.2
-./script/verify_release.sh 0.1.2 dist/release/0.1.2/TextUI-0.1.2-macOS-arm64.zip
+./script/release.sh 0.2.0
+./script/verify_release.sh 0.2.0 dist/release/0.2.0/TextUI-0.2.0-macOS-arm64.zip
 git push -u origin main
 # Den erfolgreichen GitHub-CI-Lauf für diesen Commit abwarten.
-./script/publish_release.sh --dry-run 0.1.2
-./script/publish_release.sh 0.1.2
+./script/publish_release.sh --dry-run 0.2.0
+./script/publish_release.sh 0.2.0
 ```
 
 `release.sh` verlangt einen sauberen, committed Quellstand, führt alle Tests aus, baut optimiert, signiert, notarisiert und heftet das Ticket vor der ZIP-Erstellung an. `SIGNING_IDENTITY` und `NOTARY_PROFILE` erlauben lokale Überschreibungen. Zugangsdaten bleiben ausschließlich im Schlüsselbund. Ein bestehendes Release-Ausgabeverzeichnis wird nicht überschrieben. Bei unterbrochener Notarisierung erst den vorhandenen Auftrag anhand der Submission-ID bzw. Notarisierungshistorie prüfen; nicht erneut hochladen.

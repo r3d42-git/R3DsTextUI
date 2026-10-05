@@ -4,12 +4,12 @@
 
 The page is a standalone Archify architecture viewer with light/dark themes,
 search, pan/zoom, source references and export controls. It documents the native
-editor, controller, preview, persistence and local integration boundaries.
+editor, minimap, rulers, appearance, preview, persistence and local integration boundaries.
 
 ## Source evidence
 
-Source snapshot: `4a90c64e67d5fc52b7861e375b01907dca56f409`.
-All twelve source references across ten components were verified against that commit and origin.
+Source snapshot: `2e7cc7a606609fd835383942fde0fe701bcafe74`.
+All sixteen source references across ten components were verified against that immutable commit.
 The JSON source is `architecture.json`; the published artifact is `../index.html`.
 The arrows describe selected outbound operations, not every callback or return.
 “Database” is Archify's storage category; TextUI uses files and JSON, not a database server.
@@ -18,6 +18,18 @@ and JSON validation/indentation. JSON formatting preserves key order, number
 precision and string escapes; errors include line/column. The source stays unchanged.
 The confirmed-link path is coordinated by AppDelegate. The clipboard path uses
 PreviewCodeCopy in an isolated WebKit content world.
+
+The editor owns a 136 pt minimap with 3 pt structure rows. A moving overview
+window tracks long documents; click, drag and wheel navigation preserve the text
+selection. The minimap remains beside the source when preview is visible.
+The line-number gutter and column ruler are independently configurable; the
+ruler follows horizontal scrolling and marks a visible insertion point.
+The controller persists Light / Dark / System appearance and visibility choices
+in UserDefaults. Rounded tabs and brighter dark chrome use the same app theme.
+Editors inherit app appearance. Coalesced chrome notifications and a guarded
+TextKit size reconciliation avoid the appearance/layout reentry path addressed
+in 0.2.0; inactive editor colors refresh when the tab is selected.
+These presentation features stay inside the existing editor/controller nodes.
 
 Draft checkpointing is delayed by 350 ms; dependent UI refresh is delayed by
 650 ms. Explicit Save checks the original byte baseline before an atomic write.
@@ -30,8 +42,8 @@ runtime acceptance tests.
 - Archify showcase: 9/9 checks, zero errors and zero warnings.
 - Browser evidence: passed at 1440×900, 1600×1000, 1920×1080 and 2048×1320.
 - Light/dark captures: both endpoint sizes; no horizontal or vertical overflow.
-- Perceptual review: passed after inspection of the 1440×900 light and
-  2048×1320 dark screenshots; clear routes, readable labels and balanced layout.
+- Perceptual review: passed after inspection of all four light/dark endpoint
+  screenshots; clear routes, readable labels and balanced layout.
 - Geometry correction rounds for this update: 0 (existing layout preserved).
 - Viewer interaction and export workflows were not separately exercised.
 

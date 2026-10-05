@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "TextUI · Local-first architecture",
+    "title": "TextUI \u00b7 Local-first architecture",
     "locale": "en",
     "quality_profile": "showcase",
     "viewBox": [
@@ -11,7 +11,7 @@
     ],
     "repository": {
       "url": "https://github.com/r3d42-git/R3DsTextUI",
-      "revision": "4a90c64e67d5fc52b7861e375b01907dca56f409",
+      "revision": "2e7cc7a606609fd835383942fde0fe701bcafe74",
       "provider": "github",
       "link_mode": "web"
     }
@@ -21,7 +21,7 @@
       "id": "editor",
       "type": "frontend",
       "label": "Native editor",
-      "sublabel": "AppKit · NSTextView",
+      "sublabel": "TextKit \u00b7 minimap \u00b7 rulers",
       "pos": [
         35,
         275
@@ -34,6 +34,14 @@
         {
           "path": "Sources/TextUI/EditorPane.swift",
           "line": 5
+        },
+        {
+          "path": "Sources/TextUI/EditorMinimap.swift",
+          "line": 94
+        },
+        {
+          "path": "Sources/TextUI/ColumnRuler.swift",
+          "line": 6
         }
       ]
     },
@@ -41,7 +49,7 @@
       "id": "controller",
       "type": "backend",
       "label": "App controller",
-      "sublabel": "Tabs · commands · drafts",
+      "sublabel": "Tabs \u00b7 appearance \u00b7 drafts",
       "pos": [
         355,
         275
@@ -54,6 +62,14 @@
         {
           "path": "Sources/TextUI/AppController.swift",
           "line": 16
+        },
+        {
+          "path": "Sources/TextUI/AppearanceMode.swift",
+          "line": 3
+        },
+        {
+          "path": "Sources/TextUI/DocumentTabView.swift",
+          "line": 4
         }
       ]
     },
@@ -61,7 +77,7 @@
       "id": "renderers",
       "type": "backend",
       "label": "Preview renderers",
-      "sublabel": "Markdown · Wiki · HTML · JSON",
+      "sublabel": "Markdown \u00b7 Wiki \u00b7 HTML \u00b7 JSON",
       "pos": [
         675,
         275
@@ -73,7 +89,7 @@
       "sources": [
         {
           "path": "Sources/TextUI/AppController.swift",
-          "line": 568
+          "line": 650
         },
         {
           "path": "Sources/TextUICore/JSONPreview.swift",
@@ -85,7 +101,7 @@
       "id": "webview",
       "type": "frontend",
       "label": "Offline preview",
-      "sublabel": "WKWebView · restricted CSP",
+      "sublabel": "WKWebView \u00b7 restricted CSP",
       "pos": [
         995,
         275
@@ -97,7 +113,7 @@
       "sources": [
         {
           "path": "Sources/TextUI/AppController.swift",
-          "line": 574
+          "line": 660
         }
       ]
     },
@@ -105,7 +121,7 @@
       "id": "syntax",
       "type": "backend",
       "label": "Syntax engine",
-      "sublabel": "Async tokens · version check",
+      "sublabel": "Async tokens \u00b7 version check",
       "pos": [
         35,
         65
@@ -117,7 +133,7 @@
       "sources": [
         {
           "path": "Sources/TextUI/EditorPane.swift",
-          "line": 174
+          "line": 312
         },
         {
           "path": "Sources/TextUICore/SyntaxHighlighting.swift",
@@ -149,7 +165,7 @@
       "id": "files",
       "type": "database",
       "label": "Document files",
-      "sublabel": "Encoding · conflict check",
+      "sublabel": "Encoding \u00b7 conflict check",
       "pos": [
         355,
         505
@@ -161,7 +177,7 @@
       "sources": [
         {
           "path": "Sources/TextUICore/Documents.swift",
-          "line": 87
+          "line": 92
         }
       ]
     },
@@ -169,7 +185,7 @@
       "id": "search",
       "type": "backend",
       "label": "Search & outline",
-      "sublabel": "TextUICore · UTF-16 ranges",
+      "sublabel": "TextUICore \u00b7 UTF-16 ranges",
       "pos": [
         675,
         505
@@ -181,7 +197,7 @@
       "sources": [
         {
           "path": "Sources/TextUI/AppController.swift",
-          "line": 489
+          "line": 588
         }
       ]
     },
@@ -201,7 +217,7 @@
       "sources": [
         {
           "path": "Sources/TextUI/AppController.swift",
-          "line": 598
+          "line": 682
         }
       ]
     },
@@ -221,7 +237,7 @@
       "sources": [
         {
           "path": "Sources/TextUI/PreviewCodeCopy.swift",
-          "line": 11
+          "line": 6
         }
       ]
     }
@@ -280,8 +296,9 @@
       "dot": "cyan",
       "title": "Native, local-first",
       "items": [
-        "SwiftPM: TextUI + TextUICore",
-        "macOS 15+ · Apple Silicon"
+        "AppKit editor \u00b7 minimap \u00b7 caret ruler",
+        "Light / Dark / System preference",
+        "macOS 15+ \u00b7 Apple Silicon"
       ]
     },
     {

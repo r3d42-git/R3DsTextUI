@@ -5,7 +5,7 @@
 A lightweight native text editor for macOS 15 and later on Apple Silicon.
 TextUI focuses on `.txt`, `.md`, `.html`, and `.json` files, multiple documents in tabs, and reliable recovery of unsaved work.
 
-**Status: early release 0.1.2.** A public project licensed under **GPL-3.0-or-later**. Display name: **TextUI**; bundle name: **R3Ds TextUI**; stable bundle identifier: `com.r3d42.textui`.
+**Status: early release 0.2.0.** A public project licensed under **GPL-3.0-or-later**. Display name: **TextUI**; bundle name: **R3Ds TextUI**; stable bundle identifier: `com.r3d42.textui`.
 
 [Downloads and release notes](https://github.com/r3d42-git/R3DsTextUI/releases) · [License](LICENSE) · [Licensing scope and third-party components](LICENSING.md) · [Interactive architecture](https://r3d42-git.github.io/R3DsTextUI/)
 
@@ -14,15 +14,31 @@ To install, extract the release ZIP and drag `TextUI.app` into Applications. Onl
 ## Current features
 
 - Native AppKit text editing, automatic format detection by file extension, and DokuWiki detection based on the contents of `.txt` files. Syntax highlighting for JSON, Markdown, DokuWiki, and HTML, including embedded CSS. A dark blue editor palette in dark mode and a matching light palette in light mode.
-- Multiple documents in tabs, line numbers, cursor position, and selection size.
+- Multiple documents in rounded tabs, independently adjustable line numbers and column ruler, cursor position, and selection size.
 - Go to line, document outline, font size controls, and line wrapping.
 - Find and replace with case sensitivity, whole-word matching, and regular expressions.
 - Explicit saving with `⌘S`, continuous local draft recovery, and optional automatic saving for files that already have a name and location.
 - Optional JSON, Markdown, DokuWiki, and HTML preview (⌥⌘P) alongside the source. Markdown supports tables, task lists, and code blocks, among other features. The preview updates after a short pause in typing; document scripts and network access are disabled. Web links open in the default browser only after confirmation, and copy buttons let you copy code.
 
-55 automated core and editor tests pass. Launch, basic editing, search, draft recovery, and an HTML document with 2,500 lines have been checked locally. Further details and outstanding checks are documented in `PROJECT_SUMMARY.md` (German).
+72 automated core and editor tests pass. Launch, basic editing, search, draft recovery, and an HTML document with 2,500 lines have been checked locally. Further details and outstanding checks are documented in `PROJECT_SUMMARY.md` (German).
 
 Draft recovery does not replace an external backup. File conflicts, recovery after crashes, and user interactions remain areas for further testing.
+
+## Minimap
+
+The minimap at the editor’s right edge shows a compact, colored overview of the document. For long files, the overview follows the editor so indentation, blank lines, and code blocks remain recognizable. The visible portion is highlighted. Click to jump to a location, or drag to move the viewport. When preview is enabled, the minimap stays directly beside the source editor.
+
+Use the **Minimap** toggle in the bottom bar beside “Umbruch” and “Schrift …”, or **Darstellung → Minimap**, to show or hide it. The toggle reflects the current state. This preference persists across app restarts. Use the mouse wheel over the minimap to navigate through the document. The minimap is an overview, not a second readable text view.
+
+## Appearance
+
+Choose **Hell** (light), **Dunkel** (dark), or **System** under **Darstellung → Erscheinungsbild**. The choice applies to TextUI and persists across restarts. **System** follows the macOS appearance. The title area, toolbar, and bottom bar use matching backgrounds, with a slightly lighter dark variant. Tabs have clearly rounded top corners.
+
+## Line numbers and column ruler
+
+Use **Darstellung → Zeilennummern** and **Darstellung → Spaltenleiste** to independently show or hide line numbers and the column ruler. Both are initially visible, and these preferences persist across restarts.
+
+The column ruler above the text shows visual character positions, follows horizontal scrolling, and adjusts to the font size. Tabs occupy their displayed width; the scale starts again at the left edge of wrapped lines. A small triangle marks the visible insertion point in the column ruler. It is hidden while text is selected or the cursor is outside the visible text area. The logical cursor position remains visible in the bottom status bar.
 
 ## Saving and closing
 
@@ -84,12 +100,12 @@ Preview, syntax highlighting, and document outlines support common basic syntax:
 On a Mac with an existing Developer ID signing identity and a configured `notarytool` keychain profile named `TextUI`:
 
 ```sh
-./script/release.sh 0.1.2
-./script/verify_release.sh 0.1.2 dist/release/0.1.2/TextUI-0.1.2-macOS-arm64.zip
+./script/release.sh 0.2.0
+./script/verify_release.sh 0.2.0 dist/release/0.2.0/TextUI-0.2.0-macOS-arm64.zip
 git push -u origin main
 # Wait for the GitHub CI run for this commit to succeed.
-./script/publish_release.sh --dry-run 0.1.2
-./script/publish_release.sh 0.1.2
+./script/publish_release.sh --dry-run 0.2.0
+./script/publish_release.sh 0.2.0
 ```
 
 `release.sh` requires a clean, committed source tree, runs all tests, creates an optimized build, signs and notarizes the app, and staples the ticket before creating the ZIP. `SIGNING_IDENTITY` and `NOTARY_PROFILE` support local overrides. Credentials remain exclusively in the keychain. An existing release output directory is never overwritten. If notarization is interrupted, first check the existing submission using its submission ID or the notarization history; do not upload it again.

@@ -6,12 +6,12 @@
   "input": "docs/diagrams/architecture.json",
   "output": "docs/index.html",
   "specification": {
-    "sha256": "15bccc5f2242fc273815a0ef83b88e4e98f3a8e7724a241536c16941f9e1d4af",
-    "bytes": 5815
+    "sha256": "5c10604c8fd994a4eef522e900b5d34c6a2f7a7205e051485dee51b55feb3ddf",
+    "bytes": 6329
   },
   "artifact": {
-    "sha256": "e6c8f01259f81502c1e6a453ebb778b375235230d92d42e34ac032801434ded1",
-    "bytes": 813350
+    "sha256": "703a10463ed3be120e52a3754da39520fc7b006d5d4fa6981b465ac011c0c224",
+    "bytes": 814214
   },
   "validation": {
     "checksPassed": 9,
@@ -24,7 +24,7 @@
   "evidence": {
     "verified": true,
     "repository": "https://github.com/r3d42-git/R3DsTextUI",
-    "revision": "4a90c64e67d5fc52b7861e375b01907dca56f409",
-    "references": 12
+    "revision": "2e7cc7a606609fd835383942fde0fe701bcafe74",
+    "references": 16
   }
 }
