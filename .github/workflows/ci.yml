@@ -11,6 +11,9 @@ permissions:
 jobs:
   build:
     runs-on: macos-15
+    env:
+      # Swift Markdown 0.9 requires Swift 6.2 or newer.
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     steps:
       - uses: actions/checkout@v4
         with:
