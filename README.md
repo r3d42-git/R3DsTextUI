@@ -87,7 +87,7 @@ Sitzungen einschließlich ungespeicherter Texte liegen lokal unter `~/Library/Ap
 
 ## Markdown-Parser
 
-Die Vorschau verwendet Swift Markdown 0.7.3 und swift-cmark 0.9.0. Versionen und Revisionen sind in `Package.resolved` festgehalten. Die zugehörigen Lizenz- und Copyright-Hinweise liegen in `Resources/ThirdPartyNotices` und werden ins App-Bundle übernommen. Beim ersten Build lädt SwiftPM diese Abhängigkeiten; die Vorschau selbst arbeitet offline.
+Die Vorschau verwendet Swift Markdown 0.9.0 und swift-cmark 0.9.0. Versionen und Revisionen sind in `Package.resolved` festgehalten. Die zugehörigen Lizenz- und Copyright-Hinweise liegen in `Resources/ThirdPartyNotices` und werden ins App-Bundle übernommen. Beim ersten Build lädt SwiftPM diese Abhängigkeiten; die Vorschau selbst arbeitet offline.
 
 ## DokuWiki-Texte
 

@@ -87,7 +87,7 @@ Sessions, including unsaved text, are stored locally at `~/Library/Application S
 
 ## Markdown parser
 
-The preview uses Swift Markdown 0.7.3 and swift-cmark 0.9.0. Versions and revisions are recorded in `Package.resolved`. Their license and copyright notices are stored in `Resources/ThirdPartyNotices` and included in the app bundle. SwiftPM downloads these dependencies during the first build; the preview itself works offline.
+The preview uses Swift Markdown 0.9.0 and swift-cmark 0.9.0. Versions and revisions are recorded in `Package.resolved`. Their license and copyright notices are stored in `Resources/ThirdPartyNotices` and included in the app bundle. SwiftPM downloads these dependencies during the first build; the preview itself works offline.
 
 ## DokuWiki documents
 
