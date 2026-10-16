@@ -1,5 +1,14 @@
 # TextUI – Projektstand und Übergabe
 
+## Lokale Aktualisierung auf 0.2.1 und Startprüfung — 16.10.2026
+
+- Auf ausdrücklichen Nutzerwunsch `/Applications/TextUI.app` von 0.2.0 auf den veröffentlichten Release **0.2.1 (Build 6)** aktualisiert. Verwendet wurde das zuvor unabhängig von GitHub heruntergeladene und geprüfte Release-ZIP; dessen SHA-256 wurde vor dem Austausch erneut abgeglichen.
+- Vorherige App, Sitzungsdaten und Einstellungen vor dem Eingriff gesichert. TextUI regulär beendet und den dabei gespeicherten Sitzungsstand nochmals gesichert. Rückholbare lokale Sicherung einschließlich `verification.json`: `.local/install-backups/textui-before-0.2.1-20261016-231352/`. Diese Daten bleiben ignoriert und werden nicht veröffentlicht.
+- Am tatsächlich installierten App-Bundle Version 0.2.1 und Build 6 bestätigt; strikte Signaturprüfung einschließlich verschachtelter Komponenten, Stapling-Validierung und Gatekeeper erfolgreich (`accepted`, `Notarized Developer ID`).
+- Installierte App gestartet und laufenden Prozess unter `/Applications/TextUI.app/Contents/MacOS/TextUI` bestätigt. Native Oberfläche mit Editor und allen **acht Dokumenttabs** wiederhergestellt, Schriftgröße 20 pt und aktivierte Minimap sichtbar, kein Fehlerdialog. App nach der Prüfung geöffnet gelassen.
+- Vollständige gespeicherte Sitzung einschließlich Entwürfen nach dem Start mit dem Stand nach regulärem Beenden identisch. Alle acht Originaldateien per SHA-256 unverändert; exportierte App-Einstellungen vor und nach dem Start vollständig identisch. Keine Dokumentinhalte oder Einstellungen für den Test bearbeitet.
+- Diese Prüfung belegt den Start auf diesem Mac. Start auf einem fremden/sauberen Mac und echte macOS-15-Laufzeit bleiben ungetestet. Die nachfolgenden Release- und Wartungseinträge bleiben als historischer Stand erhalten.
+
 ## Veröffentlichter Release 0.2.1 und gemeinsames Notarisierungsprofil — 16.10.2026
 
 - [TextUI 0.2.1](https://github.com/r3d42-git/R3DsTextUI/releases/tag/v0.2.1) öffentlich veröffentlicht, kein Draft/Prerelease. Build **6**, ausschließlich **arm64**, macOS **15+**, unveränderte Bundle-ID `com.r3d42.textui`. Enthält das bereits abgenommene Swift-Markdown-Update auf 0.9.0; die Minimap-Korrektur betrifft ausschließlich den Test.
