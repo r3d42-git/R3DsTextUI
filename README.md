@@ -5,7 +5,7 @@
 Ein schlanker, nativer Texteditor für macOS 15 und neuer auf Apple Silicon.
 TextUI konzentriert sich auf `.txt`, `.md`, `.html` und `.json`, mehrere Dateien in Tabs und zuverlässige Wiederherstellung ungespeicherter Arbeit.
 
-**Status: frühe Version 0.2.0.** Öffentliches Projekt unter **GPL-3.0-or-later**. Sichtbarer App-Name: **TextUI**; Bundle-Name: **R3Ds TextUI**; stabile Bundle-ID: `com.r3d42.textui`.
+**Status: frühe Version 0.2.1.** Öffentliches Projekt unter **GPL-3.0-or-later**. Sichtbarer App-Name: **TextUI**; Bundle-Name: **R3Ds TextUI**; stabile Bundle-ID: `com.r3d42.textui`.
 
 [Downloads und Versionshinweise](https://github.com/r3d42-git/R3DsTextUI/releases) · [Lizenz](LICENSE) · [Lizenzumfang und Drittanbieter](LICENSING.md) · [Interaktive Architektur (English)](https://r3d42-git.github.io/R3DsTextUI/)
 
@@ -100,12 +100,12 @@ Vorschau, Syntaxfarben und Gliederung unterstützen die gebräuchliche Grundsynt
 Auf einem Mac mit vorhandener Developer-ID-Identität und eingerichtetem `notarytool`-Schlüsselbundprofil `TextUI`:
 
 ```sh
-./script/release.sh 0.2.0
-./script/verify_release.sh 0.2.0 dist/release/0.2.0/TextUI-0.2.0-macOS-arm64.zip
+./script/release.sh 0.2.1
+./script/verify_release.sh 0.2.1 dist/release/0.2.1/TextUI-0.2.1-macOS-arm64.zip
 git push -u origin main
 # Den erfolgreichen GitHub-CI-Lauf für diesen Commit abwarten.
-./script/publish_release.sh --dry-run 0.2.0
-./script/publish_release.sh 0.2.0
+./script/publish_release.sh --dry-run 0.2.1
+./script/publish_release.sh 0.2.1
 ```
 
 `release.sh` verlangt einen sauberen, committed Quellstand, führt alle Tests aus, baut optimiert, signiert, notarisiert und heftet das Ticket vor der ZIP-Erstellung an. `SIGNING_IDENTITY` und `NOTARY_PROFILE` erlauben lokale Überschreibungen. Zugangsdaten bleiben ausschließlich im Schlüsselbund. Ein bestehendes Release-Ausgabeverzeichnis wird nicht überschrieben. Bei unterbrochener Notarisierung erst den vorhandenen Auftrag anhand der Submission-ID bzw. Notarisierungshistorie prüfen; nicht erneut hochladen.

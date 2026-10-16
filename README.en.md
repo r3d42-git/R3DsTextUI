@@ -5,7 +5,7 @@
 A lightweight native text editor for macOS 15 and later on Apple Silicon.
 TextUI focuses on `.txt`, `.md`, `.html`, and `.json` files, multiple documents in tabs, and reliable recovery of unsaved work.
 
-**Status: early release 0.2.0.** A public project licensed under **GPL-3.0-or-later**. Display name: **TextUI**; bundle name: **R3Ds TextUI**; stable bundle identifier: `com.r3d42.textui`.
+**Status: early release 0.2.1.** A public project licensed under **GPL-3.0-or-later**. Display name: **TextUI**; bundle name: **R3Ds TextUI**; stable bundle identifier: `com.r3d42.textui`.
 
 [Downloads and release notes](https://github.com/r3d42-git/R3DsTextUI/releases) · [License](LICENSE) · [Licensing scope and third-party components](LICENSING.md) · [Interactive architecture](https://r3d42-git.github.io/R3DsTextUI/)
 
@@ -100,12 +100,12 @@ Preview, syntax highlighting, and document outlines support common basic syntax:
 On a Mac with an existing Developer ID signing identity and a configured `notarytool` keychain profile named `TextUI`:
 
 ```sh
-./script/release.sh 0.2.0
-./script/verify_release.sh 0.2.0 dist/release/0.2.0/TextUI-0.2.0-macOS-arm64.zip
+./script/release.sh 0.2.1
+./script/verify_release.sh 0.2.1 dist/release/0.2.1/TextUI-0.2.1-macOS-arm64.zip
 git push -u origin main
 # Wait for the GitHub CI run for this commit to succeed.
-./script/publish_release.sh --dry-run 0.2.0
-./script/publish_release.sh 0.2.0
+./script/publish_release.sh --dry-run 0.2.1
+./script/publish_release.sh 0.2.1
 ```
 
 `release.sh` requires a clean, committed source tree, runs all tests, creates an optimized build, signs and notarizes the app, and staples the ticket before creating the ZIP. `SIGNING_IDENTITY` and `NOTARY_PROFILE` support local overrides. Credentials remain exclusively in the keychain. An existing release output directory is never overwritten. If notarization is interrupted, first check the existing submission using its submission ID or the notarization history; do not upload it again.
