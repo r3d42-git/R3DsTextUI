@@ -79,7 +79,13 @@ final class MinimapTests: XCTestCase {
         let clip = pane.scrollView.contentView
         clip.scroll(to: NSPoint(x: 120, y: 0))
         let horizontal = clip.bounds.minX
-        try await Task.sleep(nanoseconds: 400_000_000)
+        // The overview is indexed on a utility queue. Wait for its document instead
+        // of assuming that indexing a large fixture finishes within 400 ms on CI.
+        let indexingDeadline = Date().addingTimeInterval(5)
+        while pane.minimap.contentRect.height == 0 && Date() < indexingDeadline {
+            try await Task.sleep(nanoseconds: 20_000_000)
+        }
+        XCTAssertGreaterThan(pane.minimap.contentRect.height, 0, "Minimap indexing must finish before navigation")
         let initialViewport = pane.minimap.viewportRect
         pane.minimap.onNavigate?((line as NSString).length * 300)
         XCTAssertGreaterThan(clip.bounds.minY, 500)
