@@ -1,5 +1,15 @@
 # TextUI – Projektstand und Übergabe
 
+## Abschluss PR-Wartung und lokale Synchronisierung — 16.10.2026
+
+- Auf Nutzerfreigabe [PR #2](https://github.com/r3d42-git/R3DsTextUI/pull/2) und [PR #5](https://github.com/r3d42-git/R3DsTextUI/pull/5) nach Korrekturen und grüner CI per Squash gemergt. Merge-Commits: `bcbcc3fb5297bc0eb17721cd84ff5f7ad1c932b6` und `d4d23686ffd0c44b0c958e74a94b1ba0a7da5b69`. Anschließend die ersetzten Duplikate [#4](https://github.com/r3d42-git/R3DsTextUI/pull/4) und [#3](https://github.com/r3d42-git/R3DsTextUI/pull/3) geschlossen; keine offenen PRs beim Abschluss.
+- Checkout auf v7.0.1 mit festem Commit-Verweis aktualisiert. Den instabilen Minimap-Test korrigiert: statt pauschaler 400 ms wartet er höchstens fünf Sekunden auf den tatsächlichen Index; alle bisherigen Assertions bleiben erhalten. Sechs gezielte Minimap-Tests bestanden. Keine Änderung am App-Laufzeitverhalten durch diese Testkorrektur.
+- Swift Markdown von 0.7.3 auf 0.9.0 aktualisiert; swift-cmark bleibt 0.9.0. README DE/EN und Drittanbieterhinweise nachgeführt. Keine zusätzliche Swift-/Xcode-Anhebung erforderlich. Fünf gezielte Parser-Tests sowie die echte Offline-Vorschau mit synthetischem Markdown in einer separaten QA-App bestanden; eigene Bundle-ID und eigener Sitzungspfad schützten Nutzer-App und Entwürfe. Einzelheiten stehen in den erhaltenen Abnahmeabschnitten weiter unten.
+- [Abschließende main-CI](https://github.com/r3d42-git/R3DsTextUI/actions/runs/38961983007) auf exakt `d4d23686ffd0c44b0c958e74a94b1ba0a7da5b69` erfolgreich: Swift 6.1.2, 72 Tests ohne Fehler, App-Bundlebuild und arm64-Prüfung.
+- Lokalen Checkout `/Volumes/Media/codex/R3DsTextUI` anschließend per Fast-forward synchronisiert. Kontrollierter Stand vor diesem Dokumentationsnachtrag: `HEAD = origin/main = d4d23686ffd0c44b0c958e74a94b1ba0a7da5b69`, Arbeitsbaum sauber.
+- Kein neuer App-Release oder Austausch einer installierten App. Dieser Abschlussvermerk wird separat als reine Dokumentationsänderung versioniert. Alle vorherigen Einträge bleiben erhalten.
+
+
 Stand: 2026-10-05. TextUI 0.2.0 (Build 5) ist öffentlich veröffentlicht. 72 Tests und die CI des exakten Releasecommits bestanden. Developer-ID-Signatur, Apple-Notarisierung, angeheftetes App-Ticket, Gatekeeper und Prüfsumme auch am frisch heruntergeladenen GitHub-ZIP bestätigt. Ältere Abschnitte dokumentieren den historischen Entwicklungsstand; die aktuellen Release-Nachweise stehen am Ende.
 
 ## Vereinbarter Produktumfang
