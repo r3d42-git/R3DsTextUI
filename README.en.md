@@ -97,10 +97,10 @@ Preview, syntax highlighting, and document outlines support common basic syntax:
 
 ## Building and verifying a release
 
-On a Mac with an existing Developer ID signing identity and a configured `notarytool` keychain profile named `TextUI`:
+On a Mac with an existing Developer ID signing identity and a configured `notarytool` keychain profile named `ToolBoxS` (the shared profile for local macOS releases):
 
 ```sh
-./script/release.sh 0.2.1
+NOTARY_PROFILE=ToolBoxS ./script/release.sh 0.2.1
 ./script/verify_release.sh 0.2.1 dist/release/0.2.1/TextUI-0.2.1-macOS-arm64.zip
 git push -u origin main
 # Wait for the GitHub CI run for this commit to succeed.

@@ -97,10 +97,10 @@ Vorschau, Syntaxfarben und Gliederung unterstützen die gebräuchliche Grundsynt
 
 ## Release erstellen und prüfen
 
-Auf einem Mac mit vorhandener Developer-ID-Identität und eingerichtetem `notarytool`-Schlüsselbundprofil `TextUI`:
+Auf einem Mac mit vorhandener Developer-ID-Identität und eingerichtetem `notarytool`-Schlüsselbundprofil `ToolBoxS` (gemeinsames Profil für lokale macOS-Releases):
 
 ```sh
-./script/release.sh 0.2.1
+NOTARY_PROFILE=ToolBoxS ./script/release.sh 0.2.1
 ./script/verify_release.sh 0.2.1 dist/release/0.2.1/TextUI-0.2.1-macOS-arm64.zip
 git push -u origin main
 # Den erfolgreichen GitHub-CI-Lauf für diesen Commit abwarten.
