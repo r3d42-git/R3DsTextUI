@@ -6,7 +6,7 @@ let package = Package(
     platforms: [.macOS(.v15)],
     products: [.executable(name: "TextUI", targets: ["TextUI"])],
     dependencies: [
-        .package(url: "https://github.com/swiftlang/swift-markdown.git", exact: "0.7.3")
+        .package(url: "https://github.com/swiftlang/swift-markdown.git", exact: "0.9.0")
     ],
     targets: [
         .target(name: "TextUICore", dependencies: [.product(name: "Markdown", package: "swift-markdown")]),

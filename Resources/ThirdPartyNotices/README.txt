@@ -1,4 +1,4 @@
-TextUI includes Swift Markdown (swiftlang/swift-markdown), pinned to 0.7.3,
+TextUI includes Swift Markdown (swiftlang/swift-markdown), pinned to 0.9.0,
 and its resolved parser dependency swiftlang/swift-cmark 0.9.0.
 
 Swift Markdown: https://github.com/swiftlang/swift-markdown

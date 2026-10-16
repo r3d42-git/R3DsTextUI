@@ -311,3 +311,10 @@ Am 2026-10-05 vollständigen Commit-/Push-/Releaseablauf vom Nutzer freigegeben.
 Checkout wird auf den geprüften Commit von v7.0.1 gepinnt; `persist-credentials: false` bleibt erhalten. Der frühere rote Lauf bei unverändertem PR-Head betraf zwei Scroll-Assertions im nativen Minimap-Test, während ein weiterer Lauf desselben Heads und aktuelles main bestanden. Der Test nahm bisher an, dass der asynchrone Utility-Queue-Index des großen Fixtures nach 400 ms bereit ist. Er wartet nun mit fünf Sekunden Obergrenze auf den tatsächlich vorhandenen Minimap-Inhalt, bevor er navigiert; alle bisherigen Geometrie-, Text-, Auswahl- und Scroll-Assertions bleiben erhalten. Keine Änderung am App-Laufzeitverhalten. Prüfung im isolierten Clone; Originalcheckout und Nutzersitzung bleiben erhalten.
 
 Gezielte lokale Abnahme: sechs MinimapTests unter Swift 6.4 erfolgreich; das Warten prüft alle 20 ms auf einen vorhandenen Index und endet spätestens nach fünf Sekunden mit einer ausdrücklichen Assertion.
+
+
+## Swift Markdown 0.9.0 – PR-Abnahme 16.10.2026
+
+Parser und Lockfile auf Swift Markdown 0.9.0 aktualisiert; swift-cmark bleibt 0.9.0. README deutsch/englisch und Drittanbieter-Versionshinweis nachgeführt. Swift-6.0-Projektmanifest und flexible CI-Toolchain bleiben erhalten: Upstream liefert neben dem 6.2-Manifest ein `Package@swift-5.7.swift`; der vorhandene PR-CI-Lauf mit Swift 6.1.2 bestand bereits 72 Tests und Bundlebuild.
+
+Gezielte lokale Prüfung unter Swift 6.4: fünf MarkdownPreviewTests bestanden. Temporäre QA-App im isolierten Clone, eigene Bundle-ID `com.r3d42.textui.prqa20261016` und Sitzung ausschließlich unter `/private/tmp/textui-pr-finish-20261016/qa-data/`: gestartet und tatsächliche Offline-Vorschau eines synthetischen Markdown-Dokuments geprüft. Überschrift, Fett/Kursiv, Unicode, Tabelle, Aufgabenliste, Codeblock mit HTML-Zeichen, Zitat und Link korrekt sichtbar. QA-App regulär beendet; Nutzer-App, Nutzerentwürfe und Originalcheckout nicht verändert. Keine Veröffentlichung oder Installation. Diese Prüfung deckt die gezeigten Parserfälle ab, keine vollständige manuelle Regression aller Vorschauformate.
