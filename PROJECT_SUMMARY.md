@@ -1,5 +1,16 @@
 # TextUI – Projektstand und Übergabe
 
+## Veröffentlichter Release 0.3.0 — 20.10.2026
+
+- [TextUI 0.3.0](https://github.com/r3d42-git/R3DsTextUI/releases/tag/v0.3.0) mit der vom Nutzer abgenommenen XML-Unterstützung öffentlich veröffentlicht und über GitHubs `releases/latest` bestätigt; kein Draft/Prerelease. Build **7**, macOS **15+**, ausschließlich **arm64**, unveränderte Bundle-ID `com.r3d42.textui`.
+- Quellstand gezielt als `9d666c89fa5c1565e06373fe3a125e9b2518a2ae` committed und auf `origin/main` gepusht. Annotierter Tag `v0.3.0` zeigt unverändert auf diesen Releasecommit. [GitHub-CI für exakt diesen Commit](https://github.com/r3d42-git/R3DsTextUI/actions/runs/39381298341) erfolgreich: Tests, lokaler Bundlebuild und arm64-Prüfung. Lokale native Release-Pipeline mit **85 Tests** ohne Fehler (59 Core, 26 native) und optimiertem arm64-Build bestanden.
+- Native Kette erfolgreich: `NOTARY_PROFILE=ToolBoxS ./script/release.sh 0.3.0`, anschließend `publish_release.sh --dry-run 0.3.0` und `publish_release.sh 0.3.0`. Developer-ID-Signatur `Developer ID Application: Philipp John Hild (G6JH37W285)`, Zertifikatsfingerabdruck `D548540E7FE1BD9B3C4518CC02D8786E1BFEB885`, Hardened Runtime und sicherer Zeitstempel.
+- Apple-Auftrag `ea1015ad-d339-4986-947b-02444f345b7f`: **Accepted**. App-Ticket vor Erstellung des finalen ZIPs angeheftet und validiert. Keine erneute Einreichung, keine Änderung an Zertifikaten, Schlüsselbundprofilen oder CI-Secrets.
+- [Release-ZIP `TextUI-0.3.0-macOS-arm64.zip`](https://github.com/r3d42-git/R3DsTextUI/releases/download/v0.3.0/TextUI-0.3.0-macOS-arm64.zip) und [SHA-256-Datei](https://github.com/r3d42-git/R3DsTextUI/releases/download/v0.3.0/TextUI-0.3.0-macOS-arm64.zip.sha256) frisch von GitHub heruntergeladen. Lokales ZIP, unabhängiger Download, Prüfsummendatei und GitHub-Asset-Digest stimmen überein: **`5c07a2b4d88fdaae9adda41d93dd63ffe95cb5cf627f1852f1bf94ddcb36f38b`**.
+- Heruntergeladenes ZIP frisch entpackt und geprüft: Archivintegrität, Version/Build, Bundle-ID, arm64, Lizenzdateien, strikte Signatur einschließlich verschachtelter Komponenten, Developer ID/Team, Hardened Runtime, Timestamp, angeheftetes Ticket und Gatekeeper (`accepted`, `Notarized Developer ID`). Nachweise lokal in `dist/release/0.3.0/`; unabhängiger Download unter `/private/tmp/textui-download.PHJfp1/`.
+- Lokale Installation und App-Sitzung nicht ausgetauscht. Der Nutzer übernimmt das Update selbst über R3DsToolBox. Die vor Veröffentlichung geöffnete separate QA-App bleibt davon unabhängig. Start des öffentlichen Downloads auf einem separaten sauberen Mac und echte macOS-15-Laufzeit bleiben ungetestet.
+- Dieser Abschlussnachtrag wird als reine Dokumentationsänderung separat committed/gepusht; der veröffentlichte Tag bleibt auf dem geprüften Releasecommit. Die folgenden Einträge bleiben als historischer Stand erhalten.
+
 ## Releasevorbereitung 0.3.0 — 20.10.2026
 
 - Nutzer hat die XML-Unterstützung in der separaten Test-App mit eigenen XML-Dateien abgenommen und Commit, Push sowie Veröffentlichung ausdrücklich autorisiert. Das lokale Update übernimmt er selbst über R3DsToolBox; die installierte App wird durch die Releasearbeiten nicht ausgetauscht.
@@ -47,7 +58,7 @@
 - Kein neuer App-Release oder Austausch einer installierten App. Dieser Abschlussvermerk wird separat als reine Dokumentationsänderung versioniert. Alle vorherigen Einträge bleiben erhalten.
 
 
-Stand: 2026-10-16. TextUI 0.2.1 (Build 6) ist öffentlich veröffentlicht. 72 Tests und die CI des exakten Releasecommits bestanden. Developer-ID-Signatur, Apple-Notarisierung, angeheftetes App-Ticket, Gatekeeper und Prüfsumme auch am frisch heruntergeladenen GitHub-ZIP bestätigt. Ältere Abschnitte dokumentieren den historischen Entwicklungsstand; die aktuellen Release-Nachweise stehen oben.
+Stand: 2026-10-20. TextUI 0.3.0 (Build 7) ist öffentlich veröffentlicht. 85 Tests und die CI des exakten Releasecommits bestanden. Developer-ID-Signatur, Apple-Notarisierung, angeheftetes App-Ticket, Gatekeeper und Prüfsumme auch am frisch heruntergeladenen GitHub-ZIP bestätigt. Ältere Abschnitte dokumentieren den historischen Entwicklungsstand; die aktuellen Release-Nachweise stehen oben.
 
 ## Vereinbarter Produktumfang
 
@@ -78,7 +89,7 @@ Swift Package mit AppKit-Executable `TextUI`, einer `TextUICore`-Bibliothek und 
 
 Der Nutzer hat am 2026-09-27 das öffentliche Repository `r3d42-git/R3DsTextUI`, Commit und Push aller Projektänderungen sowie die signierte und notarisierte Distribution autorisiert. Lizenz: GPL-3.0-or-later; Drittanbieterhinweise bleiben erhalten. Keine Nutzerdateien, echten Entwürfe, Tokens oder privaten Schlüssel einchecken.
 
-Releaseprofil: SwiftPM, `main`, Version 0.2.1 (Build 6), Apple Silicon arm64, macOS 15+, Bundle-ID `com.r3d42.textui`. Lokale Developer-ID-Signierung mit Hardened Runtime, gemeinsames Schlüsselbundprofil `ToolBoxS` über `NOTARY_PROFILE=ToolBoxS`. `script/release.sh` erzeugt das ZIP erst nach angenommener Notarisierung und Stapling der App. `verify_release.sh` prüft die frisch entpackte App; `publish_release.sh` prüft Quellcommit, freien Tag, öffentliches Repository und den späteren GitHub-Download samt Digest. CI baut und testet ohne Signiergeheimnisse.
+Releaseprofil: SwiftPM, `main`, Version 0.3.0 (Build 7), Apple Silicon arm64, macOS 15+, Bundle-ID `com.r3d42.textui`. Lokale Developer-ID-Signierung mit Hardened Runtime, gemeinsames Schlüsselbundprofil `ToolBoxS` über `NOTARY_PROFILE=ToolBoxS`. `script/release.sh` erzeugt das ZIP erst nach angenommener Notarisierung und Stapling der App. `verify_release.sh` prüft die frisch entpackte App; `publish_release.sh` prüft Quellcommit, freien Tag, öffentliches Repository und den späteren GitHub-Download samt Digest. CI baut und testet ohne Signiergeheimnisse.
 
 ## Validierung am 2026-09-27
 
