@@ -17,6 +17,7 @@ public enum SyntaxHighlighting {
         switch format {
         case .text: return []
         case .json: return json(text)
+        case .xml: return xml(text)
         case .markdown: return markdown(text)
         case .dokuwiki: return DokuWikiSyntax.spans(in: text)
         case .html: return html(text)
@@ -44,6 +45,48 @@ public enum SyntaxHighlighting {
             else { kind = .punctuation }
             return SyntaxSpan(range: match.range, kind: kind)
         }
+    }
+
+    private static func xml(_ text: String) -> [SyntaxSpan] {
+        let source = text as NSString
+        var spans: [SyntaxSpan] = []
+        // XML has no HTML raw-text elements: script/style contents are ordinary
+        // XML children. Opaque regions are consumed before looking for tags.
+        let name = #"[\p{L}_:][\p{L}\p{N}\p{M}_.:\-]*"#
+        let tokens = #"(?s)<!--.*?(?:-->|\z)|<!\[CDATA\[.*?(?:\]\]>|\z)|<\?.*?(?:\?>|\z)|<!DOCTYPE(?:\"[^\"]*\"|'[^']*'|\[(?:\"[^\"]*\"|'[^']*'|[^\]\"'])*\]|[^>\[\"'])*(?:>|\z)|</?("# + name + #")(?:\"[^\"]*(?:\"|\z)|'[^']*(?:'|\z)|[^'\"<>])*(?:>|\z)"#
+        let attributes = try! NSRegularExpression(pattern: "(" + name + #")\s*=\s*(\"[^\"]*(?:\"|\z)|'[^']*(?:'|\z))"#)
+        let entities = try! NSRegularExpression(pattern: #"&(?:#\d+|#x[0-9A-Fa-f]+|[\p{L}_:][\p{L}\p{N}_.:\-]*);"#)
+        var cursor = 0
+        for token in matches(tokens, in: text) {
+            entities.enumerateMatches(in: text, range: NSRange(location: cursor, length: token.range.location - cursor)) { match, _, _ in
+                if let match { spans.append(SyntaxSpan(range: match.range, kind: .keyword)) }
+            }
+            cursor = NSMaxRange(token.range)
+            let literal = source.substring(with: token.range)
+            if literal.hasPrefix("<!--") || literal.hasPrefix("<![CDATA[") || literal.hasPrefix("<!DOCTYPE") {
+                let kind: SyntaxKind = literal.hasPrefix("<!--") ? .comment : (literal.hasPrefix("<![CDATA[") ? .string : .keyword)
+                spans.append(SyntaxSpan(range: token.range, kind: kind))
+                continue
+            }
+            spans.append(SyntaxSpan(range: token.range, kind: .punctuation))
+            let nameRange: NSRange
+            if literal.hasPrefix("<?") {
+                nameRange = matches(name, in: text, range: NSRange(location: token.range.location + 2, length: token.range.length - 2)).first?.range ?? NSRange(location: NSNotFound, length: 0)
+            } else {
+                nameRange = token.range(at: 1)
+            }
+            guard nameRange.location != NSNotFound else { continue }
+            spans.append(SyntaxSpan(range: nameRange, kind: .tag))
+            attributes.enumerateMatches(in: text, range: NSRange(location: NSMaxRange(nameRange), length: cursor - NSMaxRange(nameRange))) { attribute, _, _ in
+                guard let attribute else { return }
+                spans.append(SyntaxSpan(range: attribute.range(at: 1), kind: .attribute))
+                spans.append(SyntaxSpan(range: attribute.range(at: 2), kind: .string))
+            }
+        }
+        entities.enumerateMatches(in: text, range: NSRange(location: cursor, length: source.length - cursor)) { match, _, _ in
+            if let match { spans.append(SyntaxSpan(range: match.range, kind: .keyword)) }
+        }
+        return spans
     }
 
     private static func markdown(_ text: String) -> [SyntaxSpan] {

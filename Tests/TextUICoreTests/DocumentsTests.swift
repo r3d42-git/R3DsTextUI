@@ -3,6 +3,32 @@ import XCTest
 @testable import TextUICore
 
 final class DocumentsTests: XCTestCase {
+    func testXMLDetectionPreviewAndIncompleteEditsPreserveFileAndSession() throws {
+        let url = try temporaryDirectory().appendingPathComponent("sample.XML")
+        let text = "<?xml version=\"1.0\" encoding=\"UTF-16\"?>\r\n<root title='Grüße 😀'><item>日本語 &amp; Text</item></root>\r\n"
+        for encoding in [String.Encoding.utf16LittleEndian, .utf16BigEndian] {
+            let file = TextFile(text: text, encoding: encoding.rawValue, bom: true)
+            let original = try file.data()
+            try original.write(to: url)
+            var draft = try Draft.open(url)
+            XCTAssertEqual(draft.format, .xml)
+            XCTAssertTrue(XMLPreview.html(from: draft.file.text).contains("XML · Gültig"))
+            XCTAssertFalse(draft.isDirty)
+            try draft.save(to: url)
+            XCTAssertEqual(try Data(contentsOf: url), original)
+            draft.file.text = "<root>\r\n  <incomplete"
+            let store = SessionStore(url: url.deletingLastPathComponent().appendingPathComponent("session.json"))
+            try store.save(Session(drafts: [draft], selected: draft.id))
+            let restored = try XCTUnwrap(store.load()?.drafts.first)
+            XCTAssertEqual(restored.format, .xml)
+            XCTAssertEqual(restored.file, draft.file)
+            XCTAssertTrue(restored.isDirty)
+            try draft.save(to: url)
+            XCTAssertEqual(try Draft.open(url).file, draft.file)
+        }
+        XCTAssertEqual(DocumentFormat(url: url.deletingPathExtension().appendingPathExtension("txt"), text: "<root/>"), .text)
+    }
+
     func testDokuWikiTextDetectionPreservesFileAndSession() throws {
         let source = "====== Anleitung ======\r\n\r\n[[https://example.com|Beispiel]]\r\n<code>echo Hallo</code>\r\n"
         let directory = try temporaryDirectory()

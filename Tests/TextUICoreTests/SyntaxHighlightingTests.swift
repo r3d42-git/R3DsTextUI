@@ -3,6 +3,36 @@ import XCTest
 @testable import TextUICore
 
 final class SyntaxHighlightingTests: XCTestCase {
+    func testXMLHighlightsNamespacesUnicodeAndOpaqueRegionsWithoutHTMLRules() {
+        let text = "<?xml version=\"1.0\"?>\r\n<根 xmlns:n='urn:test' n:名=\"😀 &amp;\"><script><n:子/></script><style>color: 42px;</style><!-- <fake x='comment'/> --><![CDATA[<fake x='literal'/>]]>&amp;</根>"
+        for name in ["xml", "根", "n:子", "script", "style"] {
+            XCTAssertEqual(color(name, in: text, format: .xml), .tag)
+        }
+        for attribute in ["version", "xmlns:n", "n:名"] {
+            XCTAssertEqual(color(attribute, in: text, format: .xml), .attribute)
+        }
+        XCTAssertEqual(color("😀", in: text, format: .xml), .string)
+        XCTAssertEqual(color("comment", in: text, format: .xml), .comment)
+        XCTAssertEqual(color("literal", in: text, format: .xml), .string)
+        XCTAssertNil(color("42px", in: text, format: .xml))
+        XCTAssertNil(color("color", in: text, format: .xml))
+        let entity = (text as NSString).range(of: "&amp;", options: .backwards)
+        let spans = SyntaxHighlighting.spans(in: text, format: .xml)
+        XCTAssertTrue(spans.contains { $0.range == entity && $0.kind == .keyword })
+        for span in spans {
+            XCTAssertGreaterThan(span.range.length, 0)
+            XCTAssertLessThanOrEqual(NSMaxRange(span.range), (text as NSString).length)
+        }
+    }
+
+    func testXMLDeclarationsAndIncompleteTagsStayEditable() {
+        let text = "<!DOCTYPE root [<!ENTITY label 'value'>]>\n<root value='incomplete"
+        XCTAssertEqual(color("ENTITY", in: text, format: .xml), .keyword)
+        XCTAssertEqual(color("root value", in: text, format: .xml), .tag)
+        XCTAssertEqual(color("incomplete", in: text, format: .xml), .string)
+        XCTAssertTrue(TextNavigation.outline(text, format: .xml).isEmpty)
+    }
+
     func testLargeBundledDocumentsKeepHTMLAndCSSColorsWhileSkippingScriptBodies() {
         // Generated payload, never copied from a user's document. HTML-looking
         // strings and entities inside scripts must not allocate individual tokens.

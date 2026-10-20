@@ -1,5 +1,21 @@
 # TextUI – Projektstand und Übergabe
 
+## Releasevorbereitung 0.3.0 — 20.10.2026
+
+- Nutzer hat die XML-Unterstützung in der separaten Test-App mit eigenen XML-Dateien abgenommen und Commit, Push sowie Veröffentlichung ausdrücklich autorisiert. Das lokale Update übernimmt er selbst über R3DsToolBox; die installierte App wird durch die Releasearbeiten nicht ausgetauscht.
+- Neuer Feature-Release **0.3.0 (Build 7)**, unveränderte Produktidentität `com.r3d42.textui`, macOS 15+, ausschließlich arm64. Version in `Resources/Info.plist`, README-Anleitungen und zweisprachige Versionshinweise `release-notes/v0.3.0.md` abgeglichen.
+- Vorhandene lokale Pipeline weiterverwenden: `NOTARY_PROFILE=ToolBoxS ./script/release.sh 0.3.0`, erfolgreiche GitHub-CI des exakten Quellcommits, anschließend `./script/publish_release.sh --dry-run 0.3.0` und `./script/publish_release.sh 0.3.0`. Finale Notarisierungs-, Download- und Prüfsummennachweise werden nach Abschluss separat dokumentiert; der veröffentlichte Tag bleibt auf dem geprüften Releasecommit.
+
+## XML-Unterstützung — 20.10.2026
+
+- XML (`.xml`, unabhängig von Groß-/Kleinschreibung) ergänzt: automatische Formaterkennung, Öffnen-Dialog, Finder-Dokumentzuordnung, Syntaxfarben und Vorschau-Routing. Eigene XML-Syntaxregeln für Namespaces, Unicode-Namen, Attribute, Entitätsreferenzen, Deklarationen, Kommentare und CDATA; `script`/`style` werden als gewöhnliche XML-Elemente behandelt. Die vorhandene Überschriftengliederung bleibt für XML leer; die Vorschau bietet die aufklappbare Elementstruktur.
+- `Sources/TextUICore/XMLPreview.swift` verwendet den nativen XMLParser. Die vollständig maskierte Offline-Strukturansicht zeigt Elemente, sortierte Attribute, Text, Kommentare, CDATA und Verarbeitungsanweisungen; Mixed Content bleibt in Reihenfolge. Einrückungsleerraum bleibt im DOM, ohne leere Codekästen. Keine Kopierknöpfe an jedem Baumknoten. Quelltext wird weder formatiert noch umgeschrieben.
+- Fehlerhaftes XML zeigt eine deutsche Meldung mit Zeile/Spalte und bleibt bearbeitbar, speicherbar und als Entwurf wiederherstellbar. Bereits decodierte UTF-16-Dokumente mit Encoding-Deklaration werden korrekt geprüft; ungültige Deklarationen werden nicht still repariert. UTF-16 LE/BE, BOM und CRLF beim Öffnen/Speichern bytegenau getestet.
+- DTDs und Entitätsdeklarationen werden vor dem Parser abgelehnt; externe Entitäten sind zusätzlich deaktiviert. Kein XSLT, keine Dokumentskripte, keine externen Ressourcen. Vorschaugrenzen: 4 MiB UTF-8-Eingabetext, 128 Ebenen, 50.000 Ausgabeereignisse und 16 MiB erzeugter HTML-Inhalt. Diese Grenzen schränken das Bearbeiten/Speichern nicht ein. README DE/EN ergänzt, keine neuen Abhängigkeiten.
+- Prüfung: `swift test --arch arm64` erfolgreich, **85 Tests** (59 Core, 26 native), darunter Parser-/Entitäts-/Encoding-/Ressourcenfälle, XML-Syntax, Datei-/Entwurfs-Roundtrip und echter AppController/WebView-Ablauf mit Auf-/Zuklappen, Fehleranzeige, Tabwechsel und unverändertem Editorinhalt. Plist-Prüfung und `git diff --check` erfolgreich. Compiler-/Builddienst benötigten den erlaubten lokalen Kontext außerhalb der Sandbox.
+- Native Sichtprüfung mit synthetischem `Beispiel.xml` in einer isolierten temporären Testkopie unter `/private/tmp/textui-xml-qa-20261020/`, eigener Bundle-ID `com.r3d42.textui.xmlqa20261020` und Sitzung ausschließlich unter `qa-data/Session.json`. Projekt-natives Buildskript in dieser Testkopie verwendet; dort die Beendigung der regulären Nutzer-App ausgelassen. Arm64-Bundle mit gültiger lokaler Ad-hoc-Signatur gebaut und gestartet. Syntaxfarben, Vorschau, CDATA, Unicode und Aufklappen eines verschachtelten Knotens sichtbar geprüft. Der anfängliche QA-Startabsturz entstand nur durch eine zusätzliche `UserDefaults(suiteName:)!`-Initialisierung in der Testkopie; Crashbericht zeigte diese Stelle vor dem Dokumentladen. Zusatz entfernt, anschließende QA-Starts erfolgreich; diese Initialisierung war nie im Projektquelltext.
+- Änderungen lokal, noch kein Commit, Push, Release oder Austausch von `/Applications/TextUI.app`. Bestehende Nutzer-App und Nutzersitzung nicht verändert. Version/Build bleiben bis zum nächsten autorisierten Release unverändert.
+
 ## Lokale Aktualisierung auf 0.2.1 und Startprüfung — 16.10.2026
 
 - Auf ausdrücklichen Nutzerwunsch `/Applications/TextUI.app` von 0.2.0 auf den veröffentlichten Release **0.2.1 (Build 6)** aktualisiert. Verwendet wurde das zuvor unabhängig von GitHub heruntergeladene und geprüfte Release-ZIP; dessen SHA-256 wurde vor dem Austausch erneut abgeglichen.
@@ -37,9 +53,9 @@ Stand: 2026-10-16. TextUI 0.2.1 (Build 6) ist öffentlich veröffentlicht. 72 Te
 
 Native macOS-App ab macOS 15, Apple Silicon only. Sichtbarer Name **TextUI**, `CFBundleName` **R3Ds TextUI**, stabile Bundle-ID `com.r3d42.textui`.
 
-Fokus: `.txt`, `.md`, `.html`, `.json`, automatische Formatwahl nach Dateiendung, Tabs, Zeilennummern, Navigation in langen Dokumenten, schnell erreichbare Schriftgröße und Zeilenumbruch, Cursorstatus, leistungsfähige Suche und Ersetzen. Typische längere Nutzerdateien liegen bei rund 2.500 HTML-Zeilen.
+Fokus: `.txt`, `.md`, `.html`, `.json`, `.xml`, automatische Formatwahl nach Dateiendung, Tabs, Zeilennummern, Navigation in langen Dokumenten, schnell erreichbare Schriftgröße und Zeilenumbruch, Cursorstatus, leistungsfähige Suche und Ersetzen. Typische längere Nutzerdateien liegen bei rund 2.500 HTML-Zeilen.
 
-Vorschau ist erwünscht, darf den Editor jedoch nicht überladen. Die lokale Vorschau unterstützt HTML, Markdown, DokuWiki und JSON ohne Dokumentskripte oder Netzwerkzugriff. Synchrones Vorschau-Scrollen und umfassendere Vorschau-Ressourcenverwaltung können später folgen.
+Vorschau ist erwünscht, darf den Editor jedoch nicht überladen. Die lokale Vorschau unterstützt HTML, Markdown, DokuWiki, JSON und XML ohne Dokumentskripte oder Netzwerkzugriff. Synchrones Vorschau-Scrollen und umfassendere Vorschau-Ressourcenverwaltung können später folgen.
 
 ## Verbindliche Speicherregeln
 
