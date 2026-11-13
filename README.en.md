@@ -3,9 +3,9 @@
 [Deutsch](README.md) · **English**
 
 A lightweight native text editor for macOS 15 and later on Apple Silicon.
-TextUI focuses on `.txt`, `.md`, `.html`, `.json`, and `.xml` files, multiple documents in tabs, and reliable recovery of unsaved work.
+TextUI focuses on `.txt`, `.md`, `.html`, `.json`, `.xml`, `.command`, and `.py` files, multiple documents in tabs, and reliable recovery of unsaved work.
 
-**Version 0.3.0 · Build 7.** A public project licensed under **GPL-3.0-or-later**. Display name: **TextUI**; bundle name: **R3Ds TextUI**; stable bundle identifier: `com.r3d42.textui`.
+**Version 0.4.0 · Build 8.** A public project licensed under **GPL-3.0-or-later**. Display name: **TextUI**; bundle name: **R3Ds TextUI**; stable bundle identifier: `com.r3d42.textui`.
 
 [Downloads and release notes](https://github.com/r3d42-git/R3DsTextUI/releases) · [License](LICENSE) · [Licensing scope and third-party components](LICENSING.md) · [Interactive architecture](https://r3d42-git.github.io/R3DsTextUI/)
 
@@ -13,20 +13,20 @@ To install, extract the release ZIP and drag `TextUI.app` into Applications. Onl
 
 ## Current features
 
-- Native AppKit text editing, automatic format detection by file extension, and DokuWiki detection based on the contents of `.txt` files. Syntax highlighting for XML, JSON, Markdown, DokuWiki, and HTML, including embedded CSS. A dark blue editor palette in dark mode and a matching light palette in light mode.
+- Native AppKit text editing, automatic format detection by file extension, and DokuWiki detection based on the contents of `.txt` files. Syntax highlighting for XML, JSON, Markdown, DokuWiki, shell scripts (`.command`), Python (`.py`), and HTML, including embedded CSS. A dark blue editor palette in dark mode and a matching light palette in light mode.
 - Multiple documents in rounded tabs, independently adjustable line numbers and column ruler, cursor position, and selection size.
 - Go to line, document outline, font size controls, and line wrapping.
-- Find and replace with case sensitivity, whole-word matching, and regular expressions.
+- Find and replace with case sensitivity, whole-word matching, and regular expressions. Searches run in the background with cancellation; overly expensive expressions stop with a message. Replacements remain literal and undoable.
 - Explicit saving with `⌘S`, continuous local draft recovery, and optional automatic saving for files that already have a name and location.
 - Optional XML, JSON, Markdown, DokuWiki, and HTML preview (⌥⌘P) alongside the source. Markdown supports tables, task lists, and code blocks, among other features. The preview updates after a short pause in typing; document scripts and network access are disabled. Web links open in the default browser only after confirmation, and copy buttons let you copy code.
 
-85 automated core and editor tests pass. Launch, basic editing, search, draft recovery, and an HTML document with 2,500 lines have been checked locally. Further details and outstanding checks are documented in `PROJECT_SUMMARY.md` (German).
+119 automated core and editor tests pass. Launch, basic editing, search, draft recovery, and an HTML document with 2,500 lines have been checked locally. Further details and outstanding checks are documented in `PROJECT_SUMMARY.md` (German).
 
 Draft recovery does not replace an external backup. File conflicts, recovery after crashes, and user interactions remain areas for further testing.
 
 ## Minimap
 
-The minimap at the editor’s right edge shows a compact, colored overview of the document. For long files, the overview follows the editor so indentation, blank lines, and code blocks remain recognizable. The visible portion is highlighted. Click to jump to a location, or drag to move the viewport. When preview is enabled, the minimap stays directly beside the source editor.
+The minimap at the editor’s right edge shows a compact, colored overview of the document. For long files, the overview follows the editor so indentation, blank lines, and code blocks remain recognizable. The visible portion is highlighted. Click to jump to a location, or drag to move the viewport. When preview is enabled, the minimap stays directly beside the source editor. In narrow panes or with large editor fonts, it becomes narrower or temporarily hides. It returns when space allows, respecting your visibility preference. Drag the divider between source and preview to adjust their widths.
 
 Use the **Minimap** toggle in the bottom bar beside “Umbruch” and “Schrift …”, or **Darstellung → Minimap**, to show or hide it. The toggle reflects the current state. This preference persists across app restarts. Use the mouse wheel over the minimap to navigate through the document. The minimap is an overview, not a second readable text view.
 
@@ -83,7 +83,7 @@ TextUI is licensed under GPL-3.0-or-later; third-party notices are preserved. Se
 
 Dragging tabs to reorder them is planned; tabs can currently be moved through the navigation menu. The preview loads neither external nor local image/CSS files and does not execute scripts from the document. The app's own copy buttons run separately from the document. Supported encodings are UTF-8 and UTF-16 with a BOM; other encodings are explicitly rejected. Regular-expression replacements treat replacement text literally.
 
-Sessions, including unsaved text, are stored locally at `~/Library/Application Support/com.r3d42.textui/Session.json`. They are not uploaded.
+Sessions, including unsaved text, are stored locally at `~/Library/Application Support/com.r3d42.textui/Session.json`. Cursor and scroll positions and the active tab also use a small `Session.navigation.json` checkpoint, avoiding rewrites of every document’s text. Routine checkpoints run in the background; explicit save, close and quit operations save the latest state in order. Existing session files remain readable. These data are not uploaded.
 
 ## Markdown parser
 
@@ -100,12 +100,12 @@ Preview, syntax highlighting, and document outlines support common basic syntax:
 On a Mac with an existing Developer ID signing identity and a configured `notarytool` keychain profile named `ToolBoxS` (the shared profile for local macOS releases):
 
 ```sh
-NOTARY_PROFILE=ToolBoxS ./script/release.sh 0.3.0
-./script/verify_release.sh 0.3.0 dist/release/0.3.0/TextUI-0.3.0-macOS-arm64.zip
+NOTARY_PROFILE=ToolBoxS ./script/release.sh 0.4.0
+./script/verify_release.sh 0.4.0 dist/release/0.4.0/TextUI-0.4.0-macOS-arm64.zip
 git push -u origin main
 # Wait for the GitHub CI run for this commit to succeed.
-./script/publish_release.sh --dry-run 0.3.0
-./script/publish_release.sh 0.3.0
+./script/publish_release.sh --dry-run 0.4.0
+./script/publish_release.sh 0.4.0
 ```
 
 `release.sh` requires a clean, committed source tree, runs all tests, creates an optimized build, signs and notarizes the app, and staples the ticket before creating the ZIP. `SIGNING_IDENTITY` and `NOTARY_PROFILE` support local overrides. Credentials remain exclusively in the keychain. An existing release output directory is never overwritten. If notarization is interrupted, first check the existing submission using its submission ID or the notarization history; do not upload it again.
@@ -119,3 +119,11 @@ JSON files support syntax highlighting and an offline preview (⌥⌘P) with rea
 ## XML
 
 XML files with the `.xml` extension are detected case-insensitively and can be opened, edited, and saved. They support syntax highlighting and a collapsible offline structure preview (⌥⌘P). The preview shows elements, attributes, namespaces, text, CDATA, comments, and processing instructions. It executes neither scripts nor XSLT; DTDs and external entities are disabled. Malformed XML displays a line and column and remains editable and saveable. Previewing and saving preserve the source, file encoding, BOM, and line endings. The preview is limited to 4 MiB of input text, 128 nesting levels, and a bounded structure size. Attributes are sorted for readability; entity references appear as resolved text.
+
+## Shell and Python scripts
+
+Files ending in `.command` or `.py` are detected case-insensitively as **Shell** or **Python**. Opening, editing, find/replace, saving and draft recovery follow the same rules as other text documents. TextUI is offered as an alternate editor in “Open With” and does not replace the current default handler.
+
+Syntax colors mark comments, strings, keywords and numbers, plus shell variables/substitutions and Python definition names. This is lightweight highlighting rather than a language parser. Shell here-documents have no dedicated highlighting; shell substitutions and Python f-strings each receive one continuous color. Incomplete code remains editable and saveable.
+
+The app does not execute scripts and offers no document preview for these formats. Saving preserves existing permissions, including execute bits. New script files receive no additional execute permissions.

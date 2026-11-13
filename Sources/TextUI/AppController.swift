@@ -6,9 +6,15 @@ import TextUICore
 final class DocumentTab {
     var draft: Draft
     let editor: EditorPane
+    var revision = 0
+    private(set) var statusDetails: String
     init(_ draft: Draft, fontSize: CGFloat) {
         self.draft = draft
         self.editor = EditorPane(text: draft.file.text, format: draft.format, fontSize: fontSize)
+        statusDetails = "\(draft.format.rawValue)   ·   \(draft.file.encodingName) / \(draft.file.lineEnding)"
+    }
+    func refreshStatusDetails() {
+        statusDetails = "\(draft.format.rawValue)   ·   \(draft.file.encodingName) / \(draft.file.lineEnding)"
     }
 }
 
@@ -34,6 +40,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
     var autosave = false
     var appearanceMode = AppearanceMode.system
     var appearanceDefaults = UserDefaults.standard
+    let sessionWriter = SessionWriter()
+    private var contentNeedsCheckpoint = true
+    private var sessionCheckpointID: UUID?
+    private var checkpointGeneration = 0
+    private var checkpointErrorVisible = false
+    let tabScroll = TabScrollView(frame: .zero)
     let tabStrip = NSStackView()
     let editorHost = NSView()
     let status = NSTextField(labelWithString: "")
@@ -47,9 +59,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
     let wholeWord = NSButton(checkboxWithTitle: "Wort", target: nil, action: nil)
     let regex = NSButton(checkboxWithTitle: ".*", target: nil, action: nil)
     let matchCount = NSTextField(labelWithString: "")
-    let split = NSStackView()
+    let splitController = NSSplitViewController()
+    let split = EditorSplitView(frame: .zero)
     let previewHost = NSView()
-    var previewMinimumWidth: NSLayoutConstraint!
     let previewButton = NSButton()
     let previewNote = NSTextField(labelWithString: "Offline-Vorschau")
     private let previewQueue = DispatchQueue(label: "TextUI.preview", qos: .userInitiated)
@@ -60,6 +72,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
     private var previewCodeCopy: PreviewCodeCopy?
     private var linkConfirmationVisible = false
     var previewVisible = false
+    private let searchQueue = DispatchQueue(label: "TextUI.search", qos: .userInitiated)
+    private var searchCancellation: SearchCancellation?
+    private var searchGeneration = 0
+    private var completedSearchKey: SearchKey?
+    private var pendingSearchKey: SearchKey?
+    private var searchCompletions: [() -> Void] = []
+    private struct SearchKey: Equatable {
+        let tab: UUID?
+        let revision: Int
+        let query: String
+        let matchCase: Bool
+        let wholeWord: Bool
+        let regex: Bool
+    }
     var searchRanges: [NSRange] = []
     var outlineEntries: [OutlineEntry] = []
 
@@ -76,6 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         buildWindow()
         do {
             if let session = try store.load() {
+                sessionCheckpointID = session.checkpointID
                 for var draft in session.drafts {
                     if !draft.isDirty, let url = draft.url, let fresh = try? Draft.open(url) {
                         draft.file = fresh.file; draft.baseline = fresh.baseline
@@ -211,25 +238,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         previewButton.imagePosition = .imageLeading
         toolbar.addArrangedSubview(previewButton)
         root.addArrangedSubview(toolbar)
-        let tabScroll = NSScrollView()
         tabScroll.hasHorizontalScroller = true; tabScroll.autohidesScrollers = true; tabScroll.drawsBackground = false
         tabStrip.orientation = .horizontal; tabStrip.spacing = 8
         tabStrip.edgeInsets = NSEdgeInsets(top: 4, left: 12, bottom: 4, right: 12)
         tabStrip.translatesAutoresizingMaskIntoConstraints = false
         tabScroll.documentView = tabStrip
-        tabStrip.heightAnchor.constraint(equalTo: tabScroll.contentView.heightAnchor).isActive = true
+        tabStrip.heightAnchor.constraint(equalToConstant: 43).isActive = true
         tabStrip.leadingAnchor.constraint(equalTo: tabScroll.contentView.leadingAnchor).isActive = true
         tabStrip.topAnchor.constraint(equalTo: tabScroll.contentView.topAnchor).isActive = true
-        tabScroll.heightAnchor.constraint(equalToConstant: 43).isActive = true
         root.addArrangedSubview(tabScroll)
         configureSearch()
         root.addArrangedSubview(searchRow)
-        split.orientation = .horizontal; split.distribution = .fillEqually
-        split.alignment = .height; split.spacing = 1
-        split.detachesHiddenViews = true
+        split.translatesAutoresizingMaskIntoConstraints = false
         editorHost.clipsToBounds = true
-        split.addArrangedSubview(editorHost)
-        editorHost.widthAnchor.constraint(greaterThanOrEqualToConstant: 320).isActive = true
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .nonPersistent()
         config.defaultWebpagePreferences.allowsContentJavaScript = false
@@ -245,8 +266,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         previewStack.orientation = .vertical; previewStack.alignment = .leading; previewStack.spacing = 8
         pin(previewStack, in: previewHost, inset: 10)
         webView.widthAnchor.constraint(equalTo: previewStack.widthAnchor).isActive = true
-        split.addArrangedSubview(previewHost)
-        previewMinimumWidth = previewHost.widthAnchor.constraint(greaterThanOrEqualToConstant: 240)
+        split.configure(editor: editorHost, preview: previewHost, controller: splitController)
         previewHost.isHidden = true
         root.addArrangedSubview(split)
         let bottom = NSStackView()
@@ -273,7 +293,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
 
     func pin(_ child: NSView, in parent: NSView, inset: CGFloat = 0) {
         parent.addSubview(child); child.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([child.leadingAnchor.constraint(equalTo: parent.leadingAnchor, constant: inset), child.trailingAnchor.constraint(equalTo: parent.trailingAnchor, constant: -inset), child.topAnchor.constraint(equalTo: parent.topAnchor, constant: inset), child.bottomAnchor.constraint(equalTo: parent.bottomAnchor, constant: -inset)])
+        let constraints = [child.leadingAnchor.constraint(equalTo: parent.leadingAnchor, constant: inset), child.trailingAnchor.constraint(equalTo: parent.trailingAnchor, constant: -inset), child.topAnchor.constraint(equalTo: parent.topAnchor, constant: inset), child.bottomAnchor.constraint(equalTo: parent.bottomAnchor, constant: -inset)]
+        NSLayoutConstraint.activate(constraints)
     }
 
     func configureSearch() {
@@ -296,7 +317,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
             tab.draft.file.text = tab.editor.textView.string
             self.changed(tab)
         }
-        tab.editor.onSelection = { [weak self] in self?.updateStatus(); if self?.ready == true { self?.persistSoon() } }
+        tab.editor.onSelection = { [weak self] in self?.updateStatus(); if self?.ready == true { self?.persistSoon(contentChanged: false) } }
         tabs.append(tab)
         if shouldSelect { select(draft.id); persistSoon() }
     }
@@ -320,6 +341,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         tab.editor.setColumnRulerVisible(columnRulerVisible)
         tab.editor.setLineNumbersVisible(lineNumbersVisible)
         pin(tab.editor.view, in: editorHost)
+        window.contentView?.layoutSubtreeIfNeeded()
         updatePreview()
         window.contentView?.layoutSubtreeIfNeeded()
         tab.editor.updateAppearance(format: tab.draft.format, fontSize: fontSize, wrap: wrap)
@@ -329,7 +351,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         window.makeFirstResponder(tab.editor.textView)
         tab.editor.scrollView.contentView.scroll(to: NSPoint(x: 0, y: tab.draft.scrollY))
         tab.editor.scrollView.reflectScrolledClipView(tab.editor.scrollView.contentView)
-        rebuildTabs(); updateStatus(); updateOutline(); updateSearch()
+        rebuildTabs(); revealSelectedTab(); updateStatus(); updateOutline(); updateSearch()
         let savedY = tab.draft.scrollY
         DispatchQueue.main.async { [weak self, weak tab] in
             guard let self, let tab, self.current === tab else { return }
@@ -346,6 +368,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
             let title = (tab.draft.isDirty ? "● " : "") + tab.draft.title
             let selectButton = button(title, #selector(tabClicked(_:)))
             selectButton.isBordered = false
+            selectButton.cell?.lineBreakMode = .byTruncatingMiddle
+            selectButton.cell?.usesSingleLineMode = true
+            selectButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
             selectButton.tag = index
             selectButton.toolTip = tab.draft.url?.path ?? "Noch nicht als Datei gespeichert"
             selectButton.contentTintColor = tab.draft.id == selectedID ? .labelColor : .secondaryLabelColor
@@ -354,14 +379,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
             close.tag = index; close.isBordered = false; close.toolTip = "Tab schließen"
             let group = DocumentTabView(views: [selectButton, close]); group.spacing = 8
             group.isSelected = tab.draft.id == selectedID
+            group.widthAnchor.constraint(lessThanOrEqualToConstant: 300).isActive = true
             group.heightAnchor.constraint(equalToConstant: 35).isActive = true
             group.edgeInsets = NSEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
             tabStrip.addArrangedSubview(group)
         }
         window.title = "\(current?.draft.title ?? "TextUI") — TextUI"
+        revealSelectedTab()
+    }
+
+    func revealSelectedTab() {
+        window.contentView?.layoutSubtreeIfNeeded()
+        guard let index = tabs.firstIndex(where: { $0.draft.id == selectedID }), tabStrip.arrangedSubviews.indices.contains(index) else { return }
+        tabStrip.scrollToVisible(tabStrip.arrangedSubviews[index].frame)
     }
 
     func changed(_ tab: DocumentTab) {
+        tab.revision += 1
+        tab.refreshStatusDetails()
+        invalidateSearch()
         previewGeneration += 1
         previewWork?.cancel()
         rebuildTabs(); updateStatus(); persistSoon()
@@ -381,34 +417,69 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         refresh = work; DispatchQueue.main.asyncAfter(deadline: .now() + 0.65, execute: work)
     }
 
-    func persistSoon() {
+    func persistSoon(contentChanged: Bool = true) {
+        if contentChanged { contentNeedsCheckpoint = true }
         checkpoint?.cancel()
-        let work = DispatchWorkItem { [weak self] in _ = self?.persist() }
+        let work = DispatchWorkItem { [weak self] in self?.persistInBackground() }
         checkpoint = work; DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: work)
+    }
+
+    func persistInBackground() {
+        guard sessionHealthy else { return }
+        capture()
+        checkpointGeneration += 1
+        let generation = checkpointGeneration
+        let completion: (Result<Void, Error>) -> Void = { [weak self] result in
+            guard let self, case .failure(let error) = result else { return }
+            self.contentNeedsCheckpoint = true
+            guard generation == self.checkpointGeneration, !self.checkpointErrorVisible else { return }
+            self.checkpointErrorVisible = true
+            self.showError(error)
+            self.checkpointErrorVisible = false
+        }
+        if contentNeedsCheckpoint || sessionCheckpointID == nil {
+            let token = UUID()
+            sessionCheckpointID = token
+            contentNeedsCheckpoint = false
+            sessionWriter.save(Session(drafts: tabs.map(\.draft), selected: selectedID, checkpointID: token), to: store, completion: completion)
+        } else if let token = sessionCheckpointID {
+            let session = Session(drafts: tabs.map(\.draft), selected: selectedID)
+            sessionWriter.saveNavigation(SessionNavigation(session: session, checkpointID: token), to: store, completion: completion)
+        }
     }
 
     @discardableResult func persist() -> Bool {
         guard sessionHealthy else { return false }
+        checkpoint?.cancel()
+        checkpointGeneration += 1
         capture()
-        do { try store.save(Session(drafts: tabs.map(\.draft), selected: selectedID)); return true }
-        catch { showError(error); return false }
+        let token = UUID()
+        do {
+            try sessionWriter.saveAndWait(Session(drafts: tabs.map(\.draft), selected: selectedID, checkpointID: token), to: store)
+            sessionCheckpointID = token; contentNeedsCheckpoint = false
+            return true
+        } catch { contentNeedsCheckpoint = true; showError(error); return false }
     }
 
     func updateStatus() {
         guard let tab = current else { return }
         let selection = tab.editor.textView.selectedRange()
-        let position = TextNavigation.position(tab.editor.textView.string, at: selection.location)
+        let position = tab.editor.position(at: selection.location)
         let count = selection.length > 0 ? " · \((tab.editor.textView.string as NSString).substring(with: selection).count) ausgewählt" : ""
-        status.stringValue = "Z \(position.line) : S \(position.column)\(count)   ·   \(tab.draft.format.rawValue)   ·   \(tab.draft.file.encodingName) / \(tab.draft.file.lineEnding)\(autosave ? "   ·   Auto" : "")"
+        status.stringValue = "Z \(position.line) : S \(position.column)\(count)   ·   \(tab.statusDetails)\(autosave ? "   ·   Auto" : "")"
         sizeLabel.stringValue = "\(Int(fontSize)) pt"
     }
 
     @objc func newDocument() { add(Draft()); window.makeKeyAndOrderFront(nil) }
     @objc func openDocument() {
         let panel = NSOpenPanel(); panel.allowsMultipleSelection = true
-        panel.allowedContentTypes = [.plainText, .html, .json, .xml, UTType(filenameExtension: "md") ?? .plainText]
+        panel.allowedContentTypes = Self.openDocumentTypes
         panel.allowsOtherFileTypes = true
         if panel.runModal() == .OK { open(panel.urls) }
+    }
+    static var openDocumentTypes: [UTType] {
+        [.plainText, .html, .json, .xml, UTType(filenameExtension: "md") ?? .plainText,
+         UTType(filenameExtension: "command") ?? .shellScript, .pythonScript]
     }
     func open(_ urls: [URL]) {
         for url in urls {
@@ -445,13 +516,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         tab.draft.file.text = tab.editor.textView.string
         do {
             try tab.draft.save(to: resolved)
+            tab.refreshStatusDetails()
             tab.editor.updateAppearance(format: tab.draft.format, fontSize: fontSize, wrap: wrap)
             rebuildTabs(); updateStatus(); updateOutline(); updatePreview()
             return persist()
         } catch { showError(error); return false }
     }
 
-    @objc func tabClicked(_ sender: NSButton) { select(tabs[sender.tag].draft.id); persistSoon() }
+    @objc func tabClicked(_ sender: NSButton) { select(tabs[sender.tag].draft.id); persistSoon(contentChanged: false) }
     @objc func tabCloseClicked(_ sender: NSButton) { closeTab(tabs[sender.tag]) }
     @objc func closeCurrentTab() { if let current { closeTab(current) } }
     func closeTab(_ tab: DocumentTab) {
@@ -488,12 +560,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
     }
     @objc func nextTab() { switchTab(1) }
     @objc func previousTab() { switchTab(-1) }
-    func switchTab(_ step: Int) { guard let index = tabs.firstIndex(where: { $0.draft.id == selectedID }), !tabs.isEmpty else { return }; select(tabs[(index + step + tabs.count) % tabs.count].draft.id); persistSoon() }
+    func switchTab(_ step: Int) { guard let index = tabs.firstIndex(where: { $0.draft.id == selectedID }), !tabs.isEmpty else { return }; select(tabs[(index + step + tabs.count) % tabs.count].draft.id); persistSoon(contentChanged: false) }
     @objc func moveTabLeft() { moveTab(-1) }
     @objc func moveTabRight() { moveTab(1) }
     func moveTab(_ step: Int) {
         guard let index = tabs.firstIndex(where: { $0.draft.id == selectedID }), tabs.indices.contains(index + step) else { return }
-        tabs.swapAt(index, index + step); rebuildTabs(); persistSoon()
+        tabs.swapAt(index, index + step); rebuildTabs(); revealSelectedTab(); persistSoon()
     }
     @objc func showSettings() {
         let sizes = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 260, height: 28))
@@ -545,6 +617,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
 
     func refreshTheme() {
         guard let window else { return }
+        // A detached preview has no window from which to inherit app overrides.
+        previewHost.appearance = previewHost.superview == nil ? NSApp.appearance : nil
         // Resolve window chrome again when System follows an OS appearance change.
         window.effectiveAppearance.performAsCurrentDrawingAppearance {
             window.backgroundColor = EditorTheme.windowChrome.usingColorSpace(.deviceRGB) ?? EditorTheme.windowChrome
@@ -557,13 +631,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         current?.editor.refreshColors()
     }
     func updateAppearance() {
+        updateSplitLayout()
         UserDefaults.standard.set(Double(fontSize), forKey: "fontSize"); UserDefaults.standard.set(wrap, forKey: "wrap")
         if let tab = current { tab.editor.updateAppearance(format: tab.draft.format, fontSize: fontSize, wrap: wrap) }
         updateStatus()
     }
     @objc func goToLine() {
         guard let tab = current else { return }
-        let starts = TextNavigation.lineStarts(tab.editor.textView.string)
+        let starts = tab.editor.lineStarts
         let field = NSTextField(string: "1"); field.frame = NSRect(x: 0, y: 0, width: 240, height: 24)
         let alert = NSAlert(); alert.messageText = "Gehe zu Zeile"; alert.informativeText = "Zeile 1 bis \(starts.count)"; alert.accessoryView = field
         alert.addButton(withTitle: "Gehe zu"); alert.addButton(withTitle: "Abbrechen")
@@ -585,14 +660,63 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
     var searchOptions: SearchOptions { SearchOptions(caseSensitive: matchCase.state == .on, wholeWord: wholeWord.state == .on, regex: regex.state == .on) }
     func controlTextDidChange(_ obj: Notification) { if obj.object as? NSSearchField === query { updateSearch() } }
     @objc func searchChanged() { updateSearch() }
-    func updateSearch() {
-        do { searchRanges = try searchOptions.matches(in: current?.editor.textView.string ?? "", query: query.stringValue); matchCount.stringValue = "\(searchRanges.count) Treffer"; matchCount.textColor = .secondaryLabelColor }
-        catch { searchRanges = []; matchCount.stringValue = "Muster ungültig"; matchCount.textColor = .systemRed }
+    func invalidateSearch() {
+        searchGeneration += 1
+        searchCancellation?.cancel()
+        searchRanges = []; completedSearchKey = nil; pendingSearchKey = nil
+        searchCompletions = []
+    }
+    func updateSearch(completion: (() -> Void)? = nil) {
+        let key = SearchKey(tab: selectedID, revision: current?.revision ?? 0, query: query.stringValue,
+                            matchCase: matchCase.state == .on, wholeWord: wholeWord.state == .on, regex: regex.state == .on)
+        if completedSearchKey == key { completion?(); return }
+        if pendingSearchKey == key {
+            if let completion { searchCompletions.append(completion) }
+            return
+        }
+        invalidateSearch()
+        matchCount.toolTip = nil
+        if let completion { searchCompletions.append(completion) }
+        let text = current?.editor.textView.string ?? ""
+        guard !key.query.isEmpty else {
+            completedSearchKey = key; matchCount.stringValue = "0 Treffer"
+            matchCount.textColor = .secondaryLabelColor
+            let actions = searchCompletions; searchCompletions = []; actions.forEach { $0() }
+            return
+        }
+        pendingSearchKey = key
+        let generation = searchGeneration
+        let cancellation = SearchCancellation(); searchCancellation = cancellation
+        let options = searchOptions
+        matchCount.stringValue = "Suche läuft …"; matchCount.textColor = .secondaryLabelColor
+        searchQueue.async { [weak self] in
+            let result = Result { try options.boundedMatches(in: text, query: key.query, cancelled: { cancellation.isCancelled }) }
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.searchGeneration == generation, !cancellation.isCancelled else { return }
+                self.pendingSearchKey = nil
+                let actions = self.searchCompletions; self.searchCompletions = []
+                switch result {
+                case .success(let ranges):
+                    self.searchRanges = ranges; self.completedSearchKey = key
+                    self.matchCount.stringValue = "\(ranges.count) Treffer"
+                    self.matchCount.textColor = .secondaryLabelColor
+                    for action in actions { self.updateSearch(completion: action) }
+                case .failure(let error):
+                    self.searchRanges = []
+                    self.matchCount.stringValue = (error as? SearchFailure) == .timedOut ? "Suche zu aufwendig" : "Muster ungültig"
+                    self.matchCount.toolTip = (error as? SearchFailure) == .timedOut ? "Suchausdruck vereinfachen." : nil
+                    self.matchCount.textColor = .systemRed
+                }
+            }
+        }
     }
     @objc func nextMatch() { navigateSearch(forward: true) }
     @objc func previousMatch() { navigateSearch(forward: false) }
     func navigateSearch(forward: Bool) {
-        updateSearch(); guard let text = current?.editor.textView, !searchRanges.isEmpty else { return }
+        updateSearch { [weak self] in self?.navigateCompletedSearch(forward: forward) }
+    }
+    private func navigateCompletedSearch(forward: Bool) {
+        guard let text = current?.editor.textView, !searchRanges.isEmpty else { return }
         let selected = text.selectedRange()
         let exact = searchRanges.firstIndex(of: selected)
         let range: NSRange
@@ -602,30 +726,48 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
         jump(to: range)
     }
     @objc func replaceOne() {
-        updateSearch(); guard let text = current?.editor.textView else { return }
-        let range = text.selectedRange()
-        guard searchRanges.contains(range) else { nextMatch(); return }
-        if text.shouldChangeText(in: range, replacementString: replacement.stringValue) { text.textStorage?.replaceCharacters(in: range, with: replacement.stringValue); text.didChangeText(); text.setSelectedRange(NSRange(location: range.location + (replacement.stringValue as NSString).length, length: 0)); nextMatch() }
+        let replacement = self.replacement.stringValue
+        updateSearch { [weak self] in
+            guard let self, let text = self.current?.editor.textView else { return }
+            let range = text.selectedRange()
+            guard self.searchRanges.contains(range) else { self.navigateCompletedSearch(forward: true); return }
+            if text.shouldChangeText(in: range, replacementString: replacement) {
+                text.textStorage?.replaceCharacters(in: range, with: replacement)
+                text.didChangeText()
+                text.setSelectedRange(NSRange(location: range.location + (replacement as NSString).length, length: 0))
+                self.nextMatch()
+            }
+        }
     }
     @objc func replaceAll() {
-        updateSearch(); guard let text = current?.editor.textView, !searchRanges.isEmpty else { return }
-        let ranges = searchRanges
-        text.undoManager?.beginUndoGrouping()
-        for range in ranges.reversed() {
-            if text.shouldChangeText(in: range, replacementString: replacement.stringValue) { text.textStorage?.replaceCharacters(in: range, with: replacement.stringValue) }
+        let replacement = self.replacement.stringValue
+        updateSearch { [weak self] in
+            guard let self, let text = self.current?.editor.textView, !self.searchRanges.isEmpty else { return }
+            let ranges = self.searchRanges
+            // NSTextView owns the single undoable replacement, including selections.
+            guard text.shouldChangeText(inRanges: ranges.map { NSValue(range: $0) }, replacementStrings: Array(repeating: replacement, count: ranges.count)) else { return }
+            text.undoManager?.beginUndoGrouping()
+            for range in ranges.reversed() { text.textStorage?.replaceCharacters(in: range, with: replacement) }
+            text.didChangeText(); text.undoManager?.endUndoGrouping()
+            self.updateSearch()
         }
-        text.didChangeText(); text.undoManager?.endUndoGrouping(); updateSearch()
     }
 
     @objc func togglePreview() { previewVisible.toggle(); updatePreview() }
+    func updateSplitLayout() {
+        // Leave useful text space at large editor fonts; the minimap adapts separately.
+        split.minimumEditorWidth = max(320, fontSize * 0.61 * 24 + 72)
+        split.previewVisible = !previewHost.isHidden
+        split.arrange()
+    }
     func updatePreview() {
         previewGeneration += 1
         previewWork?.cancel()
-        let supported = current.map { $0.draft.format != .text } ?? false
+        let supported = current?.draft.format.supportsPreview ?? false
         previewButton.isEnabled = supported
         previewButton.toolTip = supported ? "Vorschau ein-/ausblenden (⌥⌘P)" : "Vorschau für XML, JSON, Markdown, HTML und erkannte DokuWiki-Texte verfügbar"
         previewHost.isHidden = !previewVisible || !supported
-        previewMinimumWidth.isActive = !previewHost.isHidden
+        updateSplitLayout()
         split.layoutSubtreeIfNeeded()
         current?.editor.finishLayout()
         guard previewVisible, supported, let tab = current else {
@@ -654,7 +796,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSSe
             case .xml: rendered = XMLPreview.html(from: text)
             case .markdown: rendered = MarkdownPreview.html(from: text)
             case .dokuwiki: rendered = DokuWikiPreview.html(from: text)
-            case .html, .text: rendered = text
+            case .html: rendered = text
+            case .text, .shell, .python: return
             }
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.previewGeneration == generation, self.previewVisible else { return }
@@ -710,7 +853,7 @@ extension AppDelegate: NSMenuItemValidation {
         if menuItem.action == #selector(toggleAutosave) { menuItem.state = autosave ? .on : .off }
         if menuItem.action == #selector(toggleMinimap) { menuItem.state = minimapVisible ? .on : .off }
         if menuItem.action == #selector(toggleWrap) { menuItem.state = wrap ? .on : .off }
-        if menuItem.action == #selector(togglePreview) { menuItem.state = previewVisible ? .on : .off; return current.map { $0.draft.format != .text } ?? false }
+        if menuItem.action == #selector(togglePreview) { menuItem.state = previewVisible ? .on : .off; return current?.draft.format.supportsPreview ?? false }
         return true
     }
 }

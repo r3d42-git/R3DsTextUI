@@ -6,6 +6,15 @@ The page is a standalone Archify architecture viewer with light/dark themes,
 search, pan/zoom, source references and export controls. It documents the native
 editor, minimap, rulers, appearance, preview, persistence and local integration boundaries.
 
+## Scope of this snapshot
+
+This diagram remains pinned to the historical source snapshot below. TextUI 0.4.0
+adds Shell/Python formats, cancellable background search, serial background
+session snapshots with a token-bound navigation sidecar, a cached line index,
+and a native draggable preview divider with an adaptive minimap. See the current
+repository README for these behaviors. The diagram and its verification receipts
+have not been regenerated for 0.4.0; their claims apply to the pinned snapshot.
+
 ## Source evidence
 
 Source snapshot: `2e7cc7a606609fd835383942fde0fe701bcafe74`.

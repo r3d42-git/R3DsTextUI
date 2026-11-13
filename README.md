@@ -3,9 +3,9 @@
 **Deutsch** · [English](README.en.md)
 
 Ein schlanker, nativer Texteditor für macOS 15 und neuer auf Apple Silicon.
-TextUI konzentriert sich auf `.txt`, `.md`, `.html`, `.json` und `.xml`, mehrere Dateien in Tabs und zuverlässige Wiederherstellung ungespeicherter Arbeit.
+TextUI konzentriert sich auf `.txt`, `.md`, `.html`, `.json`, `.xml`, `.command` und `.py`, mehrere Dateien in Tabs und zuverlässige Wiederherstellung ungespeicherter Arbeit.
 
-**Version 0.3.0 · Build 7.** Öffentliches Projekt unter **GPL-3.0-or-later**. Sichtbarer App-Name: **TextUI**; Bundle-Name: **R3Ds TextUI**; stabile Bundle-ID: `com.r3d42.textui`.
+**Version 0.4.0 · Build 8.** Öffentliches Projekt unter **GPL-3.0-or-later**. Sichtbarer App-Name: **TextUI**; Bundle-Name: **R3Ds TextUI**; stabile Bundle-ID: `com.r3d42.textui`.
 
 [Downloads und Versionshinweise](https://github.com/r3d42-git/R3DsTextUI/releases) · [Lizenz](LICENSE) · [Lizenzumfang und Drittanbieter](LICENSING.md) · [Interaktive Architektur (English)](https://r3d42-git.github.io/R3DsTextUI/)
 
@@ -13,20 +13,20 @@ Zur Installation das Release-ZIP entpacken und `TextUI.app` in den Programme-Ord
 
 ## Funktionen
 
-- Native Texteingabe mit AppKit, automatischer Formaterkennung über die Dateiendung sowie DokuWiki-Erkennung anhand des Inhalts von `.txt`-Dateien. Syntaxhervorhebung für XML, JSON, Markdown, DokuWiki und HTML einschließlich eingebettetem CSS. Dunkelblaue Editorpalette im dunklen Modus, angepasste helle Palette im hellen Modus.
+- Native Texteingabe mit AppKit, automatischer Formaterkennung über die Dateiendung sowie DokuWiki-Erkennung anhand des Inhalts von `.txt`-Dateien. Syntaxhervorhebung für XML, JSON, Markdown, DokuWiki, Shell-Skripte (`.command`), Python (`.py`) und HTML einschließlich eingebettetem CSS. Dunkelblaue Editorpalette im dunklen Modus, angepasste helle Palette im hellen Modus.
 - Mehrere Dateien in abgerundeten Tabs, unabhängig schaltbare Zeilen- und Spaltenleisten, Cursorposition und Auswahlumfang.
 - Gehe zu Zeile, Dokumentgliederung, Schriftgröße und Zeilenumbruch.
-- Suchen und Ersetzen mit Groß-/Kleinschreibung, ganzen Wörtern und regulären Ausdrücken.
+- Suchen und Ersetzen mit Groß-/Kleinschreibung, ganzen Wörtern und regulären Ausdrücken. Die Suche läuft abbrechbar im Hintergrund; zu aufwendige Ausdrücke werden mit einem Hinweis beendet. Ersetzungen bleiben wörtlich und rückgängig zu machen.
 - Bewusstes Speichern mit `⌘S`, laufende lokale Entwurfssicherung und optionales automatisches Speichern bereits benannter Dateien.
 - Zuschaltbare XML-, JSON-, Markdown-, DokuWiki- und HTML-Vorschau (⌥⌘P) neben dem Quelltext. Markdown unterstützt unter anderem Tabellen, Aufgabenlisten und Codeblöcke. Aktualisierung nach kurzer Schreibpause; Dokumentskripte und Netzwerkzugriff sind deaktiviert. Weblinks öffnen sich erst nach Rückfrage im Standardbrowser; Code lässt sich per Kopierknopf übernehmen.
 
-85 automatisierte Core- und Editortests bestehen; Start, grundlegende Bearbeitung, Suche, Entwurfswiederherstellung und eine HTML-Datei mit 2.500 Zeilen wurden lokal geprüft. Weitere Details und offene Prüfungen stehen in `PROJECT_SUMMARY.md`.
+119 automatisierte Core- und Editortests bestehen; Start, grundlegende Bearbeitung, Suche, Entwurfswiederherstellung und eine HTML-Datei mit 2.500 Zeilen wurden lokal geprüft. Weitere Details und offene Prüfungen stehen in `PROJECT_SUMMARY.md`.
 
 Die Entwurfssicherung ersetzt keine externe Datensicherung. Insbesondere Dateikonflikte, Wiederherstellung nach Abstürzen und die Bedienung bleiben Gegenstand weiterer Tests.
 
 ## Minimap
 
-Die Minimap am rechten Editorrand zeigt die Dokumentstruktur als verkleinerte, farbige Übersicht. Bei langen Dateien läuft der Ausschnitt mit, damit Einrückungen, Leerzeilen und Codeblöcke erkennbar bleiben. Der sichtbare Ausschnitt ist hervorgehoben. Ein Klick springt zur entsprechenden Stelle; Ziehen verschiebt den Ausschnitt. Bei eingeblendeter Vorschau bleibt die Minimap direkt neben dem Quelltext.
+Die Minimap am rechten Editorrand zeigt die Dokumentstruktur als verkleinerte, farbige Übersicht. Bei langen Dateien läuft der Ausschnitt mit, damit Einrückungen, Leerzeilen und Codeblöcke erkennbar bleiben. Der sichtbare Ausschnitt ist hervorgehoben. Ein Klick springt zur entsprechenden Stelle; Ziehen verschiebt den Ausschnitt. Bei eingeblendeter Vorschau bleibt die Minimap direkt neben dem Quelltext. Bei wenig Platz oder großer Editorschrift wird sie schmaler oder vorübergehend ausgeblendet. Sobald wieder Platz vorhanden ist, kehrt sie entsprechend der gewählten Einstellung zurück. Die Trennlinie zwischen Quelltext und Vorschau lässt sich mit der Maus verschieben.
 
 Über den **Minimap**-Schalter unten neben „Umbruch“ und „Schrift …“ oder **Darstellung → Minimap** lässt sich die Übersicht ein- und ausblenden. Der Schalter zeigt den aktuellen Zustand an. Die Einstellung bleibt über App-Neustarts erhalten. Mit dem Mausrad über der Minimap lässt sich durch das Dokument navigieren. Die Übersicht dient der Orientierung und ist keine lesbare zweite Textansicht.
 
@@ -83,7 +83,7 @@ TextUI steht unter GPL-3.0-or-later; Drittanbieterhinweise bleiben erhalten. Det
 
 Das Ziehen von Tabs zur Umsortierung folgt später; aktuell lassen sich Tabs über das Navigationsmenü verschieben. Die Vorschau lädt weder externe noch lokale Bild-/CSS-Dateien und führt keine Skripte aus dem Dokument aus. Die app-eigenen Kopierknöpfe laufen getrennt vom Dokument. Unterstützte Kodierungen sind UTF-8 und UTF-16 mit BOM; andere Kodierungen werden ausdrücklich abgelehnt. Regex-Ersetzungen behandeln den Ersatztext wörtlich.
 
-Sitzungen einschließlich ungespeicherter Texte liegen lokal unter `~/Library/Application Support/com.r3d42.textui/Session.json`. Sie werden nicht hochgeladen.
+Sitzungen einschließlich ungespeicherter Texte liegen lokal unter `~/Library/Application Support/com.r3d42.textui/Session.json`. Cursorpositionen, Scrollpositionen und der aktive Tab werden zusätzlich in der kleinen Datei `Session.navigation.json` gesichert, ohne alle Dokumenttexte erneut zu schreiben. Die laufende Sicherung arbeitet im Hintergrund; beim bewussten Speichern, Schließen oder Beenden wird der aktuelle Stand geordnet gesichert. Vorhandene Sitzungsdateien bleiben lesbar. Diese Daten werden nicht hochgeladen.
 
 ## Markdown-Parser
 
@@ -100,12 +100,12 @@ Vorschau, Syntaxfarben und Gliederung unterstützen die gebräuchliche Grundsynt
 Auf einem Mac mit vorhandener Developer-ID-Identität und eingerichtetem `notarytool`-Schlüsselbundprofil `ToolBoxS` (gemeinsames Profil für lokale macOS-Releases):
 
 ```sh
-NOTARY_PROFILE=ToolBoxS ./script/release.sh 0.3.0
-./script/verify_release.sh 0.3.0 dist/release/0.3.0/TextUI-0.3.0-macOS-arm64.zip
+NOTARY_PROFILE=ToolBoxS ./script/release.sh 0.4.0
+./script/verify_release.sh 0.4.0 dist/release/0.4.0/TextUI-0.4.0-macOS-arm64.zip
 git push -u origin main
 # Den erfolgreichen GitHub-CI-Lauf für diesen Commit abwarten.
-./script/publish_release.sh --dry-run 0.3.0
-./script/publish_release.sh 0.3.0
+./script/publish_release.sh --dry-run 0.4.0
+./script/publish_release.sh 0.4.0
 ```
 
 `release.sh` verlangt einen sauberen, committed Quellstand, führt alle Tests aus, baut optimiert, signiert, notarisiert und heftet das Ticket vor der ZIP-Erstellung an. `SIGNING_IDENTITY` und `NOTARY_PROFILE` erlauben lokale Überschreibungen. Zugangsdaten bleiben ausschließlich im Schlüsselbund. Ein bestehendes Release-Ausgabeverzeichnis wird nicht überschrieben. Bei unterbrochener Notarisierung erst den vorhandenen Auftrag anhand der Submission-ID bzw. Notarisierungshistorie prüfen; nicht erneut hochladen.
@@ -119,3 +119,11 @@ JSON-Dateien unterstützen Syntaxfarben und eine Offline-Vorschau (⌥⌘P) mit 
 ## XML
 
 XML-Dateien mit der Endung `.xml` werden unabhängig von Groß- und Kleinschreibung automatisch erkannt und lassen sich öffnen, bearbeiten und speichern. Sie unterstützen Syntaxfarben sowie eine aufklappbare Offline-Strukturvorschau (⌥⌘P). Die Vorschau zeigt Elemente, Attribute, Namespaces, Text, CDATA, Kommentare und Verarbeitungsanweisungen. Sie führt weder Skripte noch XSLT aus; DTDs und externe Entitäten sind deaktiviert. Fehlerhaftes XML zeigt Zeile und Spalte und bleibt bearbeitbar und speicherbar. Vorschau und Speichern erhalten Quelltext, Dateikodierung, BOM und Zeilenenden. Die Vorschau ist auf 4 MiB Eingabetext, 128 Ebenen sowie eine begrenzte Strukturgröße beschränkt. Attribute werden zur Übersicht sortiert; Entitätsreferenzen erscheinen als aufgelöster Text.
+
+## Shell- und Python-Skripte
+
+Dateien mit `.command` und `.py` werden unabhängig von Groß-/Kleinschreibung als **Shell** beziehungsweise **Python** erkannt. Öffnen, Bearbeiten, Suchen/Ersetzen, Speichern und Entwurfswiederherstellung verwenden dieselben Regeln wie die übrigen Textdateien. TextUI wird als alternativer Editor für „Öffnen mit“ angeboten und ersetzt den bisherigen Standardhandler nicht.
+
+Syntaxfarben markieren Kommentare, Zeichenketten, Schlüsselwörter und Zahlen; bei Shell zusätzlich Variablen/Substitutionen, bei Python Definitionsnamen. Dies ist eine leichte Hervorhebung, kein Sprachparser. Shell-Here-Docs werden nicht gesondert ausgewertet; Shell-Substitutionen und Python-F-Strings erhalten jeweils eine durchgängige Farbe. Auch unvollständiger Code bleibt bearbeitbar und speicherbar.
+
+Die App führt Skripte nicht aus; für diese Formate gibt es keine Dokumentvorschau. Vorhandene Dateirechte einschließlich Ausführungsrechten bleiben beim Speichern erhalten. Neue Skriptdateien erhalten keine zusätzlichen Ausführungsrechte.

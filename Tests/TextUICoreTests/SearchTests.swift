@@ -42,6 +42,36 @@ final class SearchTests: XCTestCase {
         XCTAssertEqual(TextNavigation.position(text, at: 999).column, 5)
     }
 
+    func testUnicodeSeparatorsAtEOFCreateAnEmptyFinalLine() {
+        for separator in ["\n", "\r", "\r\n", "\u{2028}", "\u{2029}"] {
+            let text = "😀" + separator
+            let end = text.utf16.count
+            XCTAssertEqual(TextNavigation.lineStarts(text), [0, end], "Separator: \(separator.debugDescription)")
+            let position = TextNavigation.position(text, at: end)
+            XCTAssertEqual(position.line, 2)
+            XCTAssertEqual(position.column, 1)
+        }
+        XCTAssertEqual(TextNavigation.lineStarts("a\u{2028}b\u{2029}"), [0, 2, 4])
+    }
+
+    func testIndexedPositionPreservesCRLFAndGraphemeColumns() {
+        let text = "👩🏽‍💻e\u{301}\r\nnext\u{2028}\u{2029}"
+        let starts = TextNavigation.lineStarts(text)
+        for location in [-1] + Array(0...text.utf16.count) + [Int.max] {
+            let indexed = TextNavigation.position(text, at: location, lineStarts: starts)
+            let original = TextNavigation.position(text, at: location)
+            XCTAssertEqual(indexed.line, original.line)
+            XCTAssertEqual(indexed.column, original.column)
+        }
+        let firstLineEnd = "👩🏽‍💻e\u{301}".utf16.count
+        let position = TextNavigation.position(text, at: firstLineEnd, lineStarts: starts)
+        XCTAssertEqual(position.line, 1)
+        XCTAssertEqual(position.column, 3)
+        XCTAssertEqual(starts, [0, firstLineEnd + 2, firstLineEnd + 7, firstLineEnd + 8])
+        XCTAssertEqual(TextNavigation.position(text, at: firstLineEnd + 1, lineStarts: starts).line, 1,
+                       "The UTF-16 offset inside CRLF must stay on the preceding line")
+    }
+
     func testMarkdownAndHTMLOutlineLocationsAreEditorOffsets() {
         let markdown = "😀 intro\n# First\ntext\n## Second"
         let headings = TextNavigation.outline(markdown, format: .markdown)

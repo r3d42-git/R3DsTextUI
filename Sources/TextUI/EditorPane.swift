@@ -22,6 +22,14 @@ final class EditorPane: NSObject, NSTextViewDelegate, NSLayoutManagerDelegate {
     private var minimapWidth: NSLayoutConstraint!
     private var minimapSpans: [SyntaxSpan] = []
     private var minimapVisible = true
+    private var updatingMinimapWidth = false
+
+    /// The gutter and navigation share one index, rebuilt only after edits.
+    var lineStarts: [Int] { gutter.lineStarts }
+
+    func position(at location: Int) -> (line: Int, column: Int) {
+        TextNavigation.position(textView.string, at: location, lineStarts: lineStarts)
+    }
 
     init(text: String, format: DocumentFormat, fontSize: CGFloat) {
         self.format = format
@@ -169,7 +177,7 @@ final class EditorPane: NSObject, NSTextViewDelegate, NSLayoutManagerDelegate {
         minimap.refreshColors()
     }
 
-    @objc private func viewportSizeChanged() { synchronizeWrapWidth(); updateMinimapColumns(); updateMinimapViewport(); columnRuler.needsDisplay = true }
+    @objc private func viewportSizeChanged() { updateMinimapWidth(); synchronizeWrapWidth(); updateMinimapColumns(); updateMinimapViewport(); columnRuler.needsDisplay = true }
     @objc private func viewportScrolled() { updateMinimapViewport(); columnRuler.needsDisplay = true }
 
     func setColumnRulerVisible(_ visible: Bool) {
@@ -187,6 +195,7 @@ final class EditorPane: NSObject, NSTextViewDelegate, NSLayoutManagerDelegate {
 
     private func finishRulerVisibilityChange() {
         view.layoutSubtreeIfNeeded()
+        updateMinimapWidth()
         synchronizeWrapWidth()
         updateMinimapColumns()
         updateMinimapViewport()
@@ -195,20 +204,46 @@ final class EditorPane: NSObject, NSTextViewDelegate, NSLayoutManagerDelegate {
     }
 
     func setMinimapVisible(_ visible: Bool) {
-        guard minimapVisible != visible else { return }
         minimapVisible = visible
-        minimap.isHidden = !visible
-        minimapWidth.constant = visible ? 136 : 0
-        view.layoutSubtreeIfNeeded()
+        updateMinimapWidth()
         synchronizeWrapWidth()
         updateMinimapColumns()
-        if visible { minimap.update(text: textView.string, spans: minimapSpans); updateMinimapViewport() }
+        updateMinimapViewport()
+    }
+
+    /// Keep the user's preference while making text the priority in narrow
+    /// split panes. Base the budget on the pane, so resizing the minimap cannot
+    /// feed back into its own width calculation.
+    private func updateMinimapWidth() {
+        guard !updatingMinimapWidth else { return }
+        let width: CGFloat
+        if !minimapVisible {
+            width = 0
+        } else if view.bounds.width <= 0 {
+            width = 136
+        } else {
+            let font = EditorTheme.font(size: appliedFontSize ?? 14)
+            let glyphWidth = ("0" as NSString).size(withAttributes: [.font: font]).width
+            let textInsets = 2 * textView.textContainerInset.width + 2 * (textView.textContainer?.lineFragmentPadding ?? 0)
+            let scrollChrome = max(0, scrollView.frame.width - scrollView.contentSize.width)
+            let textBudget = 20 * glyphWidth + textInsets + scrollChrome
+            let available = view.bounds.width - (gutter.isHidden ? 0 : gutter.frame.width) - textBudget
+            width = available >= 64 ? min(136, floor(available)) : 0
+        }
+        guard minimapWidth.constant != width || minimap.isHidden != (width == 0) else { return }
+        updatingMinimapWidth = true
+        defer { updatingMinimapWidth = false }
+        let wasHidden = minimap.isHidden
+        minimap.isHidden = width == 0
+        minimapWidth.constant = width
+        view.layoutSubtreeIfNeeded()
+        if wasHidden && width > 0 { minimap.update(text: textView.string, spans: minimapSpans) }
     }
 
     private func updateMinimapColumns() { minimap.resizeOverview() }
 
     private func updateMinimapViewport() {
-        guard minimapVisible, let layout = textView.layoutManager, let container = textView.textContainer else { return }
+        guard !minimap.isHidden, let layout = textView.layoutManager, let container = textView.textContainer else { return }
         // Query only the currently visible glyph region; never request the full container.
         let glyphs = layout.glyphRange(forBoundingRect: textView.visibleRect.offsetBy(dx: -textView.textContainerOrigin.x, dy: -textView.textContainerOrigin.y), in: container)
         let characters = layout.characterRange(forGlyphRange: glyphs, actualGlyphRange: nil)
@@ -238,6 +273,7 @@ final class EditorPane: NSObject, NSTextViewDelegate, NSLayoutManagerDelegate {
         let fontChanged = appliedFontSize != fontSize
         let wrapChanged = appliedWrap != effectiveWrap
         guard fontChanged || wrapChanged || formatChanged else {
+            updateMinimapWidth()
             synchronizeWrapWidth()
             return
         }
@@ -271,6 +307,7 @@ final class EditorPane: NSObject, NSTextViewDelegate, NSLayoutManagerDelegate {
             appliedWrap = effectiveWrap
         }
         if formatChanged { scheduleHighlight() }
+        updateMinimapWidth()
         synchronizeWrapWidth()
         gutter.needsDisplay = true
         columnRuler.needsDisplay = true
@@ -281,6 +318,7 @@ final class EditorPane: NSObject, NSTextViewDelegate, NSLayoutManagerDelegate {
     /// Call after the host has its final size, before restoring a saved viewport.
     func finishLayout() {
         scrollView.layoutSubtreeIfNeeded()
+        updateMinimapWidth()
         synchronizeWrapWidth()
         if let container = textView.textContainer {
             textView.layoutManager?.ensureLayout(forBoundingRect: textView.visibleRect, in: container)
@@ -297,7 +335,7 @@ final class EditorPane: NSObject, NSTextViewDelegate, NSLayoutManagerDelegate {
         columnRuler.needsDisplay = true
         minimapSpans = []
         minimap.invalidate()
-        if minimapVisible { minimap.update(text: textView.string, spans: []) }
+        if !minimap.isHidden { minimap.update(text: textView.string, spans: []) }
         scheduleHighlight()
         onChange?()
     }
@@ -331,7 +369,7 @@ final class EditorPane: NSObject, NSTextViewDelegate, NSLayoutManagerDelegate {
                 guard let self, self.highlightGeneration == generation,
                       let layout = self.textView.layoutManager else { return }
                 self.minimapSpans = spans
-                if self.minimapVisible { self.minimap.update(text: text, spans: spans); self.updateMinimapViewport() }
+                if !self.minimap.isHidden { self.minimap.update(text: text, spans: spans); self.updateMinimapViewport() }
                 for span in spans {
                     let color: NSColor
                     switch span.kind {
@@ -392,7 +430,7 @@ final class LineNumberRuler: NSView {
     private var ruleThickness: CGFloat = 48 { didSet { widthConstraint?.constant = isHidden ? 0 : ruleThickness } }
     override var isFlipped: Bool { true }
     private weak var editor: NSTextView?
-    private var starts = [0]
+    private(set) var lineStarts = [0]
 
     init(scrollView: NSScrollView, textView: NSTextView) {
         editor = textView
@@ -416,27 +454,14 @@ final class LineNumberRuler: NSView {
 
     func rebuildLines() {
         guard let editor else { return }
-        let source = editor.string as NSString
-        starts = [0]
-        var cursor = 0
-        while cursor < source.length {
-            let end = NSMaxRange(source.lineRange(for: NSRange(location: cursor, length: 0)))
-            guard end > cursor else { break }
-            if end < source.length {
-                starts.append(end)
-            } else if source.length > 0 {
-                let last = source.character(at: source.length - 1)
-                if last == 10 || last == 13 || last == 0x2028 || last == 0x2029 { starts.append(end) }
-            }
-            cursor = end
-        }
+        lineStarts = TextNavigation.lineStarts(editor.string)
         updateWidth()
     }
 
     func updateWidth() {
         guard let editor else { return }
         let font = EditorTheme.font(size: editor.font?.pointSize ?? 14)
-        let width = (String(starts.count) as NSString).size(withAttributes: [.font: font]).width + 24
+        let width = (String(lineStarts.count) as NSString).size(withAttributes: [.font: font]).width + 24
         if ruleThickness != max(44, width) { ruleThickness = max(44, width) }
         needsDisplay = true
     }
@@ -455,13 +480,13 @@ final class LineNumberRuler: NSView {
         let selected = editor.selectedRange().location
         let visibleGlyphs = layout.glyphRange(forBoundingRect: visible, in: container)
         let visibleCharacters = layout.characterRange(forGlyphRange: visibleGlyphs, actualGlyphRange: nil)
-        var low = 0, high = starts.count
+        var low = 0, high = lineStarts.count
         while low < high {
             let middle = (low + high) / 2
-            if starts[middle] <= visibleCharacters.location { low = middle + 1 } else { high = middle }
+            if lineStarts[middle] <= visibleCharacters.location { low = middle + 1 } else { high = middle }
         }
-        for index in max(0, low - 1)..<starts.count {
-            let start = starts[index]
+        for index in max(0, low - 1)..<lineStarts.count {
+            let start = lineStarts[index]
             if start > NSMaxRange(visibleCharacters) { break }
             let lineRect: NSRect
             if start < length {
@@ -474,7 +499,7 @@ final class LineNumberRuler: NSView {
             if y + max(lineRect.height, font.pointSize + 4) < visible.minY { continue }
             if y > visible.maxY { break }
             let point = convert(NSPoint(x: 0, y: y), from: editor)
-            let next = index + 1 < starts.count ? starts[index + 1] : length + 1
+            let next = index + 1 < lineStarts.count ? lineStarts[index + 1] : length + 1
             let current = selected >= start && selected < next
             if current {
                 EditorTheme.currentGutter.setFill()

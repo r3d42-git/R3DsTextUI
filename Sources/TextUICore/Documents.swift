@@ -1,13 +1,21 @@
 import Foundation
 
 public enum DocumentFormat: String, Codable, Sendable {
-    case text = "Text", markdown = "Markdown", html = "HTML", dokuwiki = "DokuWiki", json = "JSON", xml = "XML"
+    case text = "Text", markdown = "Markdown", html = "HTML", dokuwiki = "DokuWiki", json = "JSON", xml = "XML", shell = "Shell", python = "Python"
+    public var supportsPreview: Bool {
+        switch self {
+        case .markdown, .html, .dokuwiki, .json, .xml: return true
+        case .text, .shell, .python: return false
+        }
+    }
     public init(url: URL?, text: String = "") {
         switch url?.pathExtension.lowercased() {
         case "md", "markdown": self = .markdown
         case "html", "htm": self = .html
         case "json": self = .json
         case "xml": self = .xml
+        case "command": self = .shell
+        case "py": self = .python
         case "wiki", "dokuwiki": self = .dokuwiki
         case "txt", "", nil: self = DokuWikiSyntax.isLikelyDocument(text) ? .dokuwiki : .text
         default: self = .text
@@ -103,21 +111,58 @@ public struct Session: Codable, Sendable {
     public var version = 1
     public var drafts: [Draft]
     public var selected: UUID?
-    public init(drafts: [Draft], selected: UUID?) { self.drafts = drafts; self.selected = selected }
+    public var checkpointID: UUID?
+    public init(drafts: [Draft], selected: UUID?, checkpointID: UUID? = nil) {
+        self.drafts = drafts; self.selected = selected; self.checkpointID = checkpointID
+    }
 }
 
-public struct SessionStore {
+public struct SessionNavigation: Codable, Sendable {
+    public struct Entry: Codable, Sendable {
+        public let id: UUID
+        public let selection: Int
+        public let scrollY: Double
+    }
+    public let checkpointID: UUID
+    public let selected: UUID?
+    public let entries: [Entry]
+    public init(session: Session, checkpointID: UUID) {
+        self.checkpointID = checkpointID; selected = session.selected
+        entries = session.drafts.map { Entry(id: $0.id, selection: $0.selection, scrollY: $0.scrollY) }
+    }
+}
+
+public struct SessionStore: Sendable {
     public let url: URL
     public init(url: URL) { self.url = url }
     public func load() throws -> Session? {
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
-        let session = try JSONDecoder().decode(Session.self, from: Data(contentsOf: url))
+        var session = try JSONDecoder().decode(Session.self, from: Data(contentsOf: url))
         guard session.version == 1 else { throw EditorError.invalidSession }
+        // A stale or unreadable navigation checkpoint never invalidates saved text.
+        if let data = try? Data(contentsOf: navigationURL),
+           let navigation = try? JSONDecoder().decode(SessionNavigation.self, from: data),
+           navigation.checkpointID == session.checkpointID {
+            for index in session.drafts.indices {
+                if let entry = navigation.entries.first(where: { $0.id == session.drafts[index].id }) {
+                    session.drafts[index].selection = min(max(0, entry.selection), (session.drafts[index].file.text as NSString).length)
+                    session.drafts[index].scrollY = entry.scrollY.isFinite ? max(0, entry.scrollY) : 0
+                }
+            }
+            if navigation.selected == nil || session.drafts.contains(where: { $0.id == navigation.selected }) {
+                session.selected = navigation.selected
+            }
+        }
         return session
     }
     public func save(_ session: Session) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         try JSONEncoder().encode(session).write(to: url, options: [.atomic, .completeFileProtectionUnlessOpen])
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+    }
+    public var navigationURL: URL { url.deletingPathExtension().appendingPathExtension("navigation.json") }
+    public func saveNavigation(_ navigation: SessionNavigation) throws {
+        try JSONEncoder().encode(navigation).write(to: navigationURL, options: [.atomic, .completeFileProtectionUnlessOpen])
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: navigationURL.path)
     }
 }

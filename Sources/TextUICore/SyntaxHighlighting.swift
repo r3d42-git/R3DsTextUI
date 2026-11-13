@@ -18,6 +18,8 @@ public enum SyntaxHighlighting {
         case .text: return []
         case .json: return json(text)
         case .xml: return xml(text)
+        case .shell: return ScriptSyntax.shell(text)
+        case .python: return ScriptSyntax.python(text)
         case .markdown: return markdown(text)
         case .dokuwiki: return DokuWikiSyntax.spans(in: text)
         case .html: return html(text)
